@@ -7,6 +7,9 @@ import (
 )
 
 func main() {
+
+	InitStocks()
+
 	router := mux.NewRouter()
 
 	// profiles
