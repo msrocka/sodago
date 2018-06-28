@@ -6,11 +6,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Context contains the application data
+type Context struct {
+	DataStocks []*DataStock
+}
+
 func main() {
 
-	InitStocks()
+	context := &Context{
+		DataStocks: InitStocks(),
+	}
 
 	router := mux.NewRouter()
+
+	// data stocs
+	router.Methods("GET").Path("/resource/datastocks").
+		HandlerFunc(GetDataStocksHandler(context))
 
 	// profiles
 	router.Methods("GET").Path("/resource/profiles").

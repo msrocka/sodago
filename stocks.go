@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -13,8 +14,8 @@ import (
 // DataStockList contains a list of data stocks. This type is used for XML
 // serialization.
 type DataStockList struct {
-	XMLName    xml.Name    `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataStockList"`
-	DataStocks []DataStock `xml:"dataStock"`
+	XMLName    xml.Name     `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataStockList"`
+	DataStocks []*DataStock `xml:"dataStock"`
 }
 
 // A DataStock contains a set if data sets.
@@ -26,6 +27,15 @@ type DataStock struct {
 	Description string `xml:"description"`
 }
 
+// GetDataStocksHandler returns a handler function for returning the data stock
+// meta data.
+func GetDataStocksHandler(context *Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		stockList := DataStockList{DataStocks: context.DataStocks}
+		ServeXML(&stockList, w)
+	}
+}
+
 func (stock *DataStock) String() string {
 	return stock.Name + "@" + stock.ID
 }
@@ -33,7 +43,7 @@ func (stock *DataStock) String() string {
 // InitStocks loads the data stocks from the data folder. It creates a root
 // data stock if it does not exist yet.
 func InitStocks() []*DataStock {
-	stocks := GetStockInfos()
+	stocks := readStockInfos()
 	hasRoot := false
 	for _, info := range stocks {
 		if info.IsRoot {
@@ -55,8 +65,7 @@ func InitStocks() []*DataStock {
 	return stocks
 }
 
-// GetStockInfos returns the meta data from the data stocks.
-func GetStockInfos() []*DataStock {
+func readStockInfos() []*DataStock {
 	var stocks []*DataStock
 	stat, err := os.Stat("data/stocks")
 	if err != nil || !stat.IsDir() {
@@ -68,7 +77,7 @@ func GetStockInfos() []*DataStock {
 		return stocks
 	}
 	for _, subDir := range subDirs {
-		stock := GetStockInfo("data/stocks/" + subDir.Name())
+		stock := readStockInfo("data/stocks/" + subDir.Name())
 		if stock != nil {
 			stocks = append(stocks, stock)
 		}
@@ -76,10 +85,7 @@ func GetStockInfos() []*DataStock {
 	return stocks
 }
 
-// GetStockInfo reads the data stock information from the 'meta.xml'
-// file of the given folder. It returns nil if there is no meta.xml file
-// or if reading this file failed.
-func GetStockInfo(folder string) *DataStock {
+func readStockInfo(folder string) *DataStock {
 	path := filepath.Join(folder, "meta.xml")
 	if _, err := os.Stat(path); err != nil {
 		log.Println("No data stock info found at", path)
@@ -99,8 +105,6 @@ func GetStockInfo(folder string) *DataStock {
 	return stock
 }
 
-// writeStockInfo writes the given data stock information to the meta.xml
-// file of the given folder.
 func writeStockInfo(stock *DataStock, folder string) {
 	data, err := xml.MarshalIndent(&stock, "", "    ")
 	if err != nil {
