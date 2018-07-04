@@ -29,9 +29,7 @@ func GetProfileDescriptors(w http.ResponseWriter, r *http.Request) {
 		ServeJSONBytes([]byte("[]"), w)
 		return
 	}
-	resp := struct {
-		Profiles []*Profile `json:"profiles"`
-	}{make([]*Profile, 0)}
+	profiles := make([]*Profile, 0)
 	for _, file := range files {
 		data, err := ioutil.ReadFile(dir + "/" + file.Name())
 		if err != nil {
@@ -42,9 +40,9 @@ func GetProfileDescriptors(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		resp.Profiles = append(resp.Profiles, p)
+		profiles = append(profiles, p)
 	}
-	ServeJSON(&resp, w)
+	ServeJSON(profiles, w)
 }
 
 // GetProfile returns an EPD profile for a given ID.
