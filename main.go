@@ -78,7 +78,7 @@ func initCookieStore(args *Args) {
 func registerRoutes(r *mux.Router, args *Args) {
 	log.Println("Register routes with static files from:", args.StaticDir)
 
-	// data stocs
+	// data stocks
 	r.HandleFunc("/resource/datastocks", GetDataStocks).Methods("GET")
 
 	// profiles
