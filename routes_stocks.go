@@ -27,13 +27,17 @@ type DataStock struct {
 	Description string `xml:"description"`
 }
 
-// GetDataStocksHandler returns a handler function for returning the data stock
-// meta data.
-func GetDataStocksHandler(context *Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		stockList := DataStockList{DataStocks: context.DataStocks}
-		ServeXML(&stockList, w)
-	}
+// GetDataStocks returns the list of data stocks.
+func GetDataStocks(w http.ResponseWriter, r *http.Request) {
+	var stocks []*DataStock
+	db.Iter(StockBucket, func(key, data []byte) bool {
+		ds := &DataStock{}
+		xml.Unmarshal(data, ds)
+		stocks = append(stocks, ds)
+		return true
+	})
+	list := DataStockList{DataStocks: stocks}
+	ServeXML(&list, w)
 }
 
 func (stock *DataStock) String() string {

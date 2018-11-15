@@ -5,17 +5,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
-
-// Context contains the application data
-type Context struct {
-	DataStocks []*DataStock
-}
 
 var db *DB
 var cookieStore *sessions.CookieStore
@@ -32,25 +29,27 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to initialize database", err)
 	}
+	db.RootDataStock()
 
-	context := &Context{
-		DataStocks: InitStocks(),
-	}
+	r := mux.NewRouter()
+	registerRoutes(r, args)
 
-	router := mux.NewRouter()
+	log.Println("Register shutdown routines")
+	ossignals := make(chan os.Signal)
+	signal.Notify(ossignals, syscall.SIGTERM)
+	signal.Notify(ossignals, syscall.SIGINT)
+	go func() {
+		<-ossignals
+		log.Println("Shutdown server")
+		err := db.Close()
+		if err != nil {
+			log.Fatal("Failed to close database", err)
+		}
+		os.Exit(0)
+	}()
 
-	// data stocs
-	router.Methods("GET").Path("/resource/datastocks").
-		HandlerFunc(GetDataStocksHandler(context))
-
-	// profiles
-	router.Methods("GET").Path("/resource/profiles").
-		HandlerFunc(GetProfileDescriptors)
-	router.Methods("GET").Path("/resource/profiles/").
-		HandlerFunc(GetProfileDescriptors)
-	router.Methods("GET").Path("/resource/profiles/{id}").
-		HandlerFunc(GetProfile)
-	http.ListenAndServe(":8080", router)
+	log.Println("Starting server at port:", args.Port)
+	http.ListenAndServe(":"+args.Port, r)
 }
 
 func initCookieStore(args *Args) {
@@ -74,4 +73,31 @@ func initCookieStore(args *Args) {
 		}
 	}
 	cookieStore = sessions.NewCookieStore(key)
+}
+
+func registerRoutes(r *mux.Router, args *Args) {
+	log.Println("Register routes with static files from:", args.StaticDir)
+
+	// data stocs
+	r.HandleFunc("/resource/datastocks", GetDataStocks).Methods("GET")
+
+	// profiles
+	r.Methods("GET").Path("/resource/profiles").
+		HandlerFunc(GetProfileDescriptors)
+	r.Methods("GET").Path("/resource/profiles/").
+		HandlerFunc(GetProfileDescriptors)
+	r.Methods("GET").Path("/resource/profiles/{id}").
+		HandlerFunc(GetProfile)
+
+	r.PathPrefix("/ui/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		html, err := ioutil.ReadFile(filepath.Join(args.StaticDir, "index.html"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(html)
+	})
+	fs := http.FileServer(http.Dir(args.StaticDir))
+	r.PathPrefix("/").Handler(NoCache(fs))
 }

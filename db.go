@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/xml"
+	"log"
 	"path/filepath"
 
+	uuid "github.com/satori/go.uuid"
 	"go.etcd.io/bbolt"
 )
 
@@ -59,20 +62,87 @@ func (db *DB) Close() error {
 }
 
 // Get returns the data of the entity with the given ID from the given bucket.
-func (db *DB) Get(id string, bucket BucketType) ([]byte, error) {
+func (db *DB) Get(bucket BucketType, id string) []byte {
 	var data []byte
 	err := db.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		data = b.Get([]byte(id))
 		return nil
 	})
-	return data, err
+	if err != nil {
+		log.Println("Error in db.Get: bucket=", bucket, "id=", id)
+		return nil
+	}
+	return data
+}
+
+// Put stores the given value under the given id in the bucket.
+func (db *DB) Put(bucket BucketType, id string, data []byte) {
+	if data == nil {
+		return
+	}
+	err := db.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		return b.Put([]byte(id), data)
+	})
+	if err != nil {
+		log.Println("Error while saving data into bucket=",
+			bucket, "id=", id, ":>", err)
+	}
 }
 
 // Delete deletes the entity with the given ID from the bucket.
-func (db *DB) Delete(id string, bucket BucketType) error {
+func (db *DB) Delete(bucket BucketType, id string) error {
 	return db.db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucket))
 		return bucket.Delete([]byte(id))
 	})
+}
+
+// Iter iterates over the entries in the given bucket until the function
+// parameter returns false or no entries are contained in the database anymore.
+func (db *DB) Iter(bucket BucketType, fn func(key, data []byte) bool) {
+	err := db.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		cursor := b.Cursor()
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			if !fn(k, v) {
+				break
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("Error while iterating over", bucket, ":>", err)
+	}
+}
+
+// RootDataStock returns the root data stock.
+func (db *DB) RootDataStock() *DataStock {
+	var root *DataStock
+	db.Iter(StockBucket, func(key, val []byte) bool {
+		ds := &DataStock{}
+		xml.Unmarshal(val, ds)
+		if ds.IsRoot {
+			root = ds
+			return false
+		}
+		return true
+	})
+	if root != nil {
+		return root
+	}
+	root = &DataStock{
+		IsRoot:      true,
+		ID:          uuid.NewV4().String(),
+		ShortName:   "root",
+		Name:        "root",
+		Description: "The root data stock"}
+	bytes, err := xml.Marshal(root)
+	if err != nil {
+		log.Println("Error: failed to marshal data stock :>", err)
+		return root
+	}
+	db.Put(StockBucket, root.ID, bytes)
+	return root
 }
