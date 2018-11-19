@@ -1,3 +1,10 @@
+# IDE settings
+.vscode/
+
+# example data
 data/
+
+# binaries and tests
 *.exe
+debug
 debug.test

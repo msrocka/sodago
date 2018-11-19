@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -16,6 +17,10 @@ type DataSetInfo interface {
 
 // Key returns the key under which the data set ist stored.
 func (info *ProcessInfo) Key(stock *DataStock) string {
+	if info == nil || stock == nil {
+		log.Println("Error in Key(), info == nil || stock == nul")
+		return "nil"
+	}
 	v := ParseVersion(info.Version).String() // standard format
 	return stock.ID + "/Process/" + info.UUID + "/" + v
 }
@@ -96,9 +101,8 @@ func Matches(info DataSetInfo, id string, version *Version) bool {
 
 // ServeDataSet loads the data set described by the given info object
 // from the given data stock  and writes it to the response.
-func ServeDataSet(info DataSetInfo, stock *DataStock,
-	w http.ResponseWriter) {
-	if info == nil {
+func ServeDataSet(info DataSetInfo, stock *DataStock, w http.ResponseWriter) {
+	if info == nil || stock == nil {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
