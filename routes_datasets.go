@@ -36,8 +36,18 @@ func PostDataSet(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 	stock := db.RootDataStock()
 	switch path := mux.Vars(r)["path"]; path {
+	case "processes":
+		postProcess(data, stock, w)
 	case "flows":
 		postFlow(data, stock, w)
+	case "flowproperties":
+		postFlowProperty(data, stock, w)
+	case "unitgroups":
+		postUnitGroup(data, stock, w)
+	case "contacts":
+		postContact(data, stock, w)
+	case "sources":
+		postSource(data, stock, w)
 	default:
 		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
 	}
