@@ -28,23 +28,17 @@ func GetDataSets(w http.ResponseWriter, r *http.Request) {
 
 // PostDataSet handles a post request of a data set.
 func PostDataSet(w http.ResponseWriter, r *http.Request) {
-	// path := mux.Vars(r)["path"]
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Could not read body "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	r.Body.Close()
-
-	info := ReadFlowInfo(data)
-	if info == nil {
-		http.Error(w, "Could not read body "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	stock := db.RootDataStock()
-	content := db.Content(stock)
-	content.Flows = append(content.Flows, *info)
-	db.UpdateContent(stock, content)
-	ServeXML(stock, w)
+	switch path := mux.Vars(r)["path"]; path {
+	case "flows":
+		postFlow(data, stock, w)
+	default:
+		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
+	}
 }
