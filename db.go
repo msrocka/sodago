@@ -146,3 +146,27 @@ func (db *DB) RootDataStock() *DataStock {
 	db.Put(StockBucket, root.ID, bytes)
 	return root
 }
+
+// Content returns the content of the given data stock.
+func (db *DB) Content(stock *DataStock) *InfoList {
+	data := db.Get(DataInfoBucket, stock.ID)
+	list := &InfoList{}
+	if data == nil {
+		return list
+	}
+	if err := xml.Unmarshal(data, list); err != nil {
+		log.Println("Error: Failed to read data stock content", err)
+		return &InfoList{}
+	}
+	return list
+}
+
+// UpdateContent updates the content of the given data stock.
+func (db *DB) UpdateContent(stock *DataStock, content *InfoList) {
+	data, err := xml.Marshal(content)
+	if err != nil {
+		log.Println("Error: Failed update data stock content", err)
+		return
+	}
+	db.Put(DataInfoBucket, stock.ID, data)
+}

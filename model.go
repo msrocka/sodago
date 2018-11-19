@@ -5,6 +5,22 @@ import (
 	"log"
 )
 
+// DataStockList contains a list of data stocks. This type is used for XML
+// serialization.
+type DataStockList struct {
+	XMLName    xml.Name     `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataStockList"`
+	DataStocks []*DataStock `xml:"dataStock"`
+}
+
+// A DataStock contains a set if data sets.
+type DataStock struct {
+	IsRoot      bool   `xml:"root,attr"`
+	ID          string `xml:"uuid"`
+	ShortName   string `xml:"shortName"`
+	Name        string `xml:"name"`
+	Description string `xml:"description"`
+}
+
 // An InfoList contains a list of data set information.
 type InfoList struct {
 	XMLName        xml.Name           `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetList"`
@@ -38,23 +54,24 @@ type FlowInfo struct {
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
 }
 
+// ReadFlowInfo reads the flow information from the given flow data set.
 func ReadFlowInfo(data []byte) *FlowInfo {
-	info := &struct {
+	d := &struct {
 		XMLName xml.Name `xml:"flowDataSet"`
 		Name    string   `xml:"flowInformation>dataSetInformation>name>baseName"`
 		UUID    string   `xml:"flowInformation>dataSetInformation>UUID"`
 		Version string   `xml:"administrativeInformation>publicationAndOwnership>dataSetVersion"`
 	}{}
-	err := xml.Unmarshal(data, info)
+	err := xml.Unmarshal(data, d)
 	if err != nil {
 		log.Println("ERROR: failed to read flow info", err)
 		return nil
 	}
-	flowInfo := &FlowInfo{}
-	flowInfo.Name = info.Name
-	flowInfo.UUID = info.UUID
-	flowInfo.Version = info.Version
-	return flowInfo
+	info := &FlowInfo{}
+	info.Name = d.Name
+	info.UUID = d.UUID
+	info.Version = d.Version
+	return info
 }
 
 // FlowPropertyInfo contains some meta data of a flow property data set.

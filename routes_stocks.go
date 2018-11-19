@@ -11,22 +11,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// DataStockList contains a list of data stocks. This type is used for XML
-// serialization.
-type DataStockList struct {
-	XMLName    xml.Name     `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataStockList"`
-	DataStocks []*DataStock `xml:"dataStock"`
-}
-
-// A DataStock contains a set if data sets.
-type DataStock struct {
-	IsRoot      bool   `xml:"root,attr"`
-	ID          string `xml:"uuid"`
-	ShortName   string `xml:"shortName"`
-	Name        string `xml:"name"`
-	Description string `xml:"description"`
-}
-
 // GetDataStocks returns the list of data stocks.
 func GetDataStocks(w http.ResponseWriter, r *http.Request) {
 	var stocks []*DataStock
