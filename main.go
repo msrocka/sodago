@@ -89,6 +89,8 @@ func registerRoutes(r *mux.Router, args *Args) {
 	r.Methods("GET").Path("/resource/profiles/{id}").
 		HandlerFunc(GetProfile)
 
+	RegisterDataSetRoutes(r)
+
 	r.PathPrefix("/ui/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		html, err := ioutil.ReadFile(filepath.Join(args.StaticDir, "index.html"))
 		if err != nil {

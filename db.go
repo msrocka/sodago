@@ -5,7 +5,7 @@ import (
 	"log"
 	"path/filepath"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 	"go.etcd.io/bbolt"
 )
 

@@ -17,3 +17,9 @@ go build
 ```
 
 After this you just need to start the `sodago` executable.
+
+## Testing with curl
+
+```
+curl -d "@6b1b696a-3ea8-48c6-9e8a-f0cc5ce00dba_01.00.000.xml" -X POST http://localhost/resource/flows
+```
