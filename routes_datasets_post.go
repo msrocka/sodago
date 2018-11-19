@@ -16,9 +16,7 @@ func postProcess(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/Process/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.Processes = append(content.Processes, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)
@@ -36,9 +34,7 @@ func postFlow(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/Flow/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.Flows = append(content.Flows, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)
@@ -56,9 +52,7 @@ func postFlowProperty(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/FlowProperty/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.FlowProperties = append(content.FlowProperties, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)
@@ -76,9 +70,7 @@ func postUnitGroup(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/UnitGroup/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.UnitGroups = append(content.UnitGroups, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)
@@ -96,9 +88,7 @@ func postContact(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/Contact/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.Contacts = append(content.Contacts, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)
@@ -116,9 +106,7 @@ func postSource(data []byte, stock *DataStock, w http.ResponseWriter) {
 			"already exists", http.StatusBadRequest)
 		return
 	}
-	v := ParseVersion(info.Version).String() // standard format
-	key := stock.ID + "/Source/" + info.UUID + "/" + v
-	db.Put(DataSetBucket, key, data)
+	db.Put(DataSetBucket, info.Key(stock), data)
 	content.Sources = append(content.Sources, *info)
 	db.UpdateContent(stock, content)
 	ServeXML(stock, w)

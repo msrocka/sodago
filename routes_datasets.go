@@ -9,8 +9,13 @@ import (
 
 // RegisterDataSetRoutes registers the data set methods to the given router.
 func RegisterDataSetRoutes(r *mux.Router) {
+	r.HandleFunc("/resource/{path}/{id}", GetDataSet)
 	r.HandleFunc("/resource/{path}", PostDataSet).Methods("POST")
 	r.HandleFunc("/resource/{path}", GetDataSets).Methods("GET")
+}
+
+func GetDataSet(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // GetDataSets implements the `GET Datasets` request of the soda4LCA service API
@@ -19,9 +24,18 @@ func GetDataSets(w http.ResponseWriter, r *http.Request) {
 	content := db.Content(stock)
 	list := &InfoList{}
 	switch path := mux.Vars(r)["path"]; path {
+	case "processes":
+		list.Processes = content.Processes
 	case "flows":
 		list.Flows = content.Flows
-		// TODO
+	case "flowproperties":
+		list.FlowProperties = content.FlowProperties
+	case "unitgroups":
+		list.UnitGroups = content.UnitGroups
+	case "contacts":
+		list.Contacts = content.Contacts
+	case "sources":
+		list.Sources = content.Sources
 	}
 	ServeXML(list, w)
 }
