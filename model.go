@@ -34,8 +34,8 @@ type InfoList struct {
 	Sources        []SourceInfo       `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
 }
 
-// DataSetInfo contains some meta data of a data set.
-type DataSetInfo struct {
+// BaseInfo contains some meta data of a data set.
+type BaseInfo struct {
 	UUID    string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI uuid"`
 	Version string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetVersion"`
 	Name    string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI name"`
@@ -43,13 +43,13 @@ type DataSetInfo struct {
 
 // ProcessInfo contains some meta data of a process data set.
 type ProcessInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
 }
 
 // FlowInfo contains some meta data of a flow data set.
 type FlowInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
 }
 
@@ -57,24 +57,24 @@ type FlowInfo struct {
 
 // FlowPropertyInfo contains some meta data of a flow property data set.
 type FlowPropertyInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`
 }
 
 // UnitGroupInfo contains some meta data of an unit group data set.
 type UnitGroupInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/UnitGroup unitGroup"`
 }
 
 // ContactInfo contains some meta data of a contact data set.
 type ContactInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Contact contact"`
 }
 
 // SourceInfo contains some meta data of a source data set.
 type SourceInfo struct {
-	DataSetInfo
+	BaseInfo
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
 }

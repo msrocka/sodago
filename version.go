@@ -81,3 +81,11 @@ func (v *Version) Compare(other *Version) int {
 	}
 	return v.Update - other.Update
 }
+
+func (v *Version) Same(other *Version) bool {
+	return v.Compare(other) == 0
+}
+
+func (v *Version) NewerThan(other *Version) bool {
+	return v.Compare(other) > 0
+}

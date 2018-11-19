@@ -14,15 +14,25 @@ func RegisterDataSetRoutes(r *mux.Router) {
 	r.HandleFunc("/resource/{path}", GetDataSets).Methods("GET")
 }
 
+// GetDataSet implements the `GET Dataset` function of the soda4LCA service API
 func GetDataSet(w http.ResponseWriter, r *http.Request) {
+	stock := db.RootDataStock()
+	vars := mux.Vars(r)
+	switch path := vars["path"]; path {
+	case "flows":
+		getFlow(vars, stock, w)
+	default:
+		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
+	}
 
 }
 
-// GetDataSets implements the `GET Datasets` request of the soda4LCA service API
+// GetDataSets implements the `GET Datasets` function of the soda4LCA service API
 func GetDataSets(w http.ResponseWriter, r *http.Request) {
 	stock := db.RootDataStock()
 	content := db.Content(stock)
 	list := &InfoList{}
+	// TODO: filter by name; only return current version etc.
 	switch path := mux.Vars(r)["path"]; path {
 	case "processes":
 		list.Processes = content.Processes
@@ -36,6 +46,8 @@ func GetDataSets(w http.ResponseWriter, r *http.Request) {
 		list.Contacts = content.Contacts
 	case "sources":
 		list.Sources = content.Sources
+	default:
+		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
 	}
 	ServeXML(list, w)
 }
