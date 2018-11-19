@@ -19,12 +19,21 @@ func GetDataSet(w http.ResponseWriter, r *http.Request) {
 	stock := db.RootDataStock()
 	vars := mux.Vars(r)
 	switch path := vars["path"]; path {
+	case "processes":
+		getProcess(vars, stock, w)
 	case "flows":
 		getFlow(vars, stock, w)
+	case "flowproperties":
+		getFlowProperty(vars, stock, w)
+	case "unitgroups":
+		getUnitGroup(vars, stock, w)
+	case "contacts":
+		getContact(vars, stock, w)
+	case "sources":
+		getSource(vars, stock, w)
 	default:
 		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
 	}
-
 }
 
 // GetDataSets implements the `GET Datasets` function of the soda4LCA service API
