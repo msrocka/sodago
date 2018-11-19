@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/xml"
-	"log"
 )
 
 // DataStockList contains a list of data stocks. This type is used for XML
@@ -55,24 +54,6 @@ type FlowInfo struct {
 }
 
 // ReadFlowInfo reads the flow information from the given flow data set.
-func ReadFlowInfo(data []byte) *FlowInfo {
-	d := &struct {
-		XMLName xml.Name `xml:"flowDataSet"`
-		Name    string   `xml:"flowInformation>dataSetInformation>name>baseName"`
-		UUID    string   `xml:"flowInformation>dataSetInformation>UUID"`
-		Version string   `xml:"administrativeInformation>publicationAndOwnership>dataSetVersion"`
-	}{}
-	err := xml.Unmarshal(data, d)
-	if err != nil {
-		log.Println("ERROR: failed to read flow info", err)
-		return nil
-	}
-	info := &FlowInfo{}
-	info.Name = d.Name
-	info.UUID = d.UUID
-	info.Version = d.Version
-	return info
-}
 
 // FlowPropertyInfo contains some meta data of a flow property data set.
 type FlowPropertyInfo struct {
