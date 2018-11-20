@@ -9,10 +9,22 @@ import (
 
 // RegisterDataSetRoutes registers the data set methods to the given router.
 func RegisterDataSetRoutes(r *mux.Router) {
-	r.HandleFunc("/resource/{path}/{id}", GetDataSet)
-	r.HandleFunc("/resource/{path}", PostDataSet).Methods("POST")
-	r.HandleFunc("/resource/datastocks/{datastock}/{path}", GetDataSets).Methods("GET")
-	r.HandleFunc("/resource/{path}", GetDataSets).Methods("GET")
+
+	// GET a single data set
+	r.HandleFunc("/resource/{path}/{id}", GetDataSet).
+		Methods("GET", "HEAD")
+	r.HandleFunc("/resource/{path}/{id}", GetDataSet).
+		Queries("version", "{version}").Methods("GET", "HEAD")
+
+	// POST a data set
+	r.HandleFunc("/resource/{path}", PostDataSet).
+		Methods("POST")
+
+	// GET  a list of data sets
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}", GetDataSets).
+		Methods("GET")
+	r.HandleFunc("/resource/{path}", GetDataSets).
+		Methods("GET")
 }
 
 // GetDataSet implements the `GET Dataset` function of the soda4LCA service API
