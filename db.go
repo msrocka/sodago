@@ -147,6 +147,24 @@ func (db *DB) RootDataStock() *DataStock {
 	return root
 }
 
+// DataStock returns the data stock with the given ID.
+func (db *DB) DataStock(id string) *DataStock {
+	var stock *DataStock
+	db.Iter(StockBucket, func(key, val []byte) bool {
+		if string(key) == id {
+			stock = &DataStock{}
+			err := xml.Unmarshal(val, stock)
+			if err != nil {
+				log.Println("Error: loading data stock", id, "failed")
+				stock = nil
+			}
+			return false
+		}
+		return true
+	})
+	return stock
+}
+
 // Content returns the content of the given data stock.
 func (db *DB) Content(stock *DataStock) *InfoList {
 	data := db.Get(DataInfoBucket, stock.ID)

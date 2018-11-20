@@ -33,6 +33,10 @@ func getProcess(params map[string]string, stock *DataStock, w http.ResponseWrite
 			selectedVersion = infoV
 		}
 	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
 	ServeDataSet(selected, stock, w)
 }
 
@@ -64,6 +68,10 @@ func getFlow(params map[string]string, stock *DataStock, w http.ResponseWriter) 
 			selected = info
 			selectedVersion = infoV
 		}
+	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
 	ServeDataSet(selected, stock, w)
 }
@@ -97,6 +105,10 @@ func getFlowProperty(params map[string]string, stock *DataStock, w http.Response
 			selectedVersion = infoV
 		}
 	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
 	ServeDataSet(selected, stock, w)
 }
 
@@ -128,6 +140,10 @@ func getUnitGroup(params map[string]string, stock *DataStock, w http.ResponseWri
 			selected = info
 			selectedVersion = infoV
 		}
+	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
 	ServeDataSet(selected, stock, w)
 }
@@ -161,6 +177,10 @@ func getContact(params map[string]string, stock *DataStock, w http.ResponseWrite
 			selectedVersion = infoV
 		}
 	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
 	ServeDataSet(selected, stock, w)
 }
 
@@ -192,6 +212,10 @@ func getSource(params map[string]string, stock *DataStock, w http.ResponseWriter
 			selected = info
 			selectedVersion = infoV
 		}
+	}
+	if selected == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
 	ServeDataSet(selected, stock, w)
 }

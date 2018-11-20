@@ -11,6 +11,7 @@ import (
 func RegisterDataSetRoutes(r *mux.Router) {
 	r.HandleFunc("/resource/{path}/{id}", GetDataSet)
 	r.HandleFunc("/resource/{path}", PostDataSet).Methods("POST")
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}", GetDataSets).Methods("GET")
 	r.HandleFunc("/resource/{path}", GetDataSets).Methods("GET")
 }
 
@@ -38,11 +39,23 @@ func GetDataSet(w http.ResponseWriter, r *http.Request) {
 
 // GetDataSets implements the `GET Datasets` function of the soda4LCA service API
 func GetDataSets(w http.ResponseWriter, r *http.Request) {
-	stock := db.RootDataStock()
+	vars := mux.Vars(r)
+	var stock *DataStock
+	if stockID, found := vars["datastock"]; found {
+		stock = db.DataStock(stockID)
+	} else {
+		stock = db.RootDataStock()
+	}
+	if stock == nil {
+		http.Error(w, "Unknown data stock "+vars["datastock"],
+			http.StatusBadRequest)
+		return
+	}
+
 	content := db.Content(stock)
 	list := &InfoList{}
 	// TODO: filter by name; only return current version etc.
-	switch path := mux.Vars(r)["path"]; path {
+	switch path := vars["path"]; path {
 	case "processes":
 		list.Processes = content.Processes
 	case "flows":
@@ -69,7 +82,19 @@ func PostDataSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.Body.Close()
-	stock := db.RootDataStock()
+
+	var stock *DataStock
+	stockID := r.Header.Get("stock")
+	if stockID == "" {
+		stock = db.RootDataStock()
+	} else {
+		stock = db.DataStock(stockID)
+	}
+	if stock == nil {
+		http.Error(w, "Unknown data stock "+stockID, http.StatusBadRequest)
+		return
+	}
+
 	switch path := mux.Vars(r)["path"]; path {
 	case "processes":
 		postProcess(data, stock, w)
