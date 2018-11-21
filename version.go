@@ -82,10 +82,13 @@ func (v *Version) Compare(other *Version) int {
 	return v.Update - other.Update
 }
 
+// Same returns true if both versions are exactly the same.
 func (v *Version) Same(other *Version) bool {
 	return v.Compare(other) == 0
 }
 
+// NewerThan returns true if the version is new (mean higher) than the given
+// version.
 func (v *Version) NewerThan(other *Version) bool {
 	return v.Compare(other) > 0
 }
