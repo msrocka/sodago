@@ -1,14 +1,12 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 func registerRoutes(r *mux.Router, args *Args) {
-	log.Println("Register routes with static files from:", args.StaticDir)
 
 	// data stocks
 	r.HandleFunc("/resource/datastocks", GetDataStocks).Methods("GET")
