@@ -74,33 +74,3 @@ func initCookieStore(args *Args) {
 	}
 	cookieStore = sessions.NewCookieStore(key)
 }
-
-func registerRoutes(r *mux.Router, args *Args) {
-	log.Println("Register routes with static files from:", args.StaticDir)
-
-	// data stocks
-	r.HandleFunc("/resource/datastocks", GetDataStocks).Methods("GET")
-
-	// profiles
-	r.Methods("GET").Path("/resource/profiles").
-		HandlerFunc(GetProfileDescriptors)
-	r.Methods("GET").Path("/resource/profiles/").
-		HandlerFunc(GetProfileDescriptors)
-	r.Methods("GET").Path("/resource/profiles/{id}").
-		HandlerFunc(GetProfile)
-
-	RegisterAuthRoutes(r)
-	RegisterDataSetRoutes(r)
-
-	r.PathPrefix("/ui/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		html, err := ioutil.ReadFile(filepath.Join(args.StaticDir, "index.html"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "text/html")
-		w.Write(html)
-	})
-	fs := http.FileServer(http.Dir(args.StaticDir))
-	r.PathPrefix("/").Handler(NoCache(fs))
-}
