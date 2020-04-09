@@ -17,12 +17,18 @@ import (
 var db *DB
 var cookieStore *sessions.CookieStore
 
+type server struct {
+	dir *datadir
+}
+
 func main() {
 
-	_, err := newDataDir("data")
+	server := server{}
+	dir, err := newDataDir("data")
 	if err != nil {
 		log.Fatalln("failed to init data folder", err)
 	}
+	server.dir = dir
 
 	args := GetArgs()
 	os.MkdirAll(args.DataDir, os.ModePerm)
@@ -37,7 +43,7 @@ func main() {
 	db.RootDataStock()
 
 	r := mux.NewRouter()
-	registerRoutes(r, args)
+	server.registerRoutes(r, args)
 
 	log.Println("Register shutdown routines")
 	ossignals := make(chan os.Signal)
