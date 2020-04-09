@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 // GetDataStocks returns the list of data stocks.
@@ -39,10 +39,12 @@ func InitStocks() []*DataStock {
 			break
 		}
 	}
+
+	uid, _ := uuid.NewRandom()
 	if !hasRoot {
 		root := &DataStock{
 			IsRoot:      true,
-			ID:          uuid.NewV4().String(),
+			ID:          uid.String(),
 			ShortName:   "root",
 			Name:        "root",
 			Description: "The root data stock"}
