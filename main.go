@@ -18,12 +18,17 @@ var db *DB
 var cookieStore *sessions.CookieStore
 
 func main() {
+
+	_, err := newDataDir("data")
+	if err != nil {
+		log.Fatalln("failed to init data folder", err)
+	}
+
 	args := GetArgs()
 	os.MkdirAll(args.DataDir, os.ModePerm)
 	initCookieStore(args)
 
 	// initialize the database
-	var err error
 	log.Println("initialize data in:", args.DataDir)
 	db, err = InitDB(args.DataDir)
 	if err != nil {

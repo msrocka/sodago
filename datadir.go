@@ -1,13 +1,23 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 type datadir struct {
-	root string
+	root       string
+	dataStocks []dataStock
+}
+
+type dataStock struct {
+	dir string
+	uid string
 }
 
 func fileExists(file string) bool {
@@ -25,32 +35,69 @@ func newDataDir(root string) (*datadir, error) {
 		}
 	}
 
-	dir := &datadir{root}
+	dir := &datadir{root: root}
 
-	// create the root data stock if necessary
-	if !dir.isDataStock("root") {
-		if err := dir.createDataStock("root"); err != nil {
+	// read the data stocks
+	var rootStock *dataStock
+	files, err := ioutil.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+		meta := filepath.Join(root, file.Name(), ".stock")
+		if !fileExists(meta) {
+			continue
+		}
+		data, err := ioutil.ReadFile(meta)
+		if err != nil {
 			return nil, err
 		}
+		uid := strings.TrimSpace(string(data))
+		stock := dataStock{
+			dir: filepath.Join(root, file.Name()),
+			uid: uid,
+		}
+		dir.dataStocks = append(dir.dataStocks, stock)
+		if file.Name() == "root" {
+			rootStock = &stock
+		}
+	}
+
+	// create the root data stock if necessary
+	if rootStock == nil {
+		rootStock, err := dir.createDataStock("root")
+		if err != nil {
+			return nil, err
+		}
+		dir.dataStocks = append(dir.dataStocks, *rootStock)
 	}
 
 	return dir, nil
 }
 
-func (dir *datadir) createDataStock(name string) error {
+func (dir *datadir) createDataStock(name string) (*dataStock, error) {
 	log.Println("Create data stock", name)
-
-	return nil
-}
-
-func (dir *datadir) isDataStock(name string) bool {
-	path := filepath.Join(dir.root, name)
-	if !fileExists(path) {
-		return false
+	stockDir := filepath.Join(dir.root, name)
+	if err := os.MkdirAll(stockDir, os.ModePerm); err != nil {
+		return nil, err
 	}
-	meta := filepath.Join(path, "meta.xml")
-	if !fileExists(meta) {
-		return false
+	uid, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
 	}
-	return true
+	meta := filepath.Join(stockDir, ".stock")
+	uidStr := uid.String()
+	err = ioutil.WriteFile(meta, []byte(uidStr), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	stock := dataStock{
+		uid: uidStr,
+		dir: stockDir,
+	}
+
+	return &stock, nil
 }
