@@ -26,17 +26,24 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 			w.Write([]byte("Logged in"))
 		})
 
-	// GET a single data set
+	// GET a single data set from the root data stock
+	// specific version
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
+		Queries("version", "{version}").
+		Methods("GET", "HEAD")
+	// the latest version
 	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Methods("GET", "HEAD")
-	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
-		Queries("version", "{version}").Methods("GET", "HEAD")
-	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
-		s.handleGetDataSet()).Methods("GET", "HEAD")
+
+	// GET a single data set from a data stock
+	// specific version
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
 		s.handleGetDataSet()).
 		Queries("version", "{version}").
 		Methods("GET", "HEAD")
+	// the latest version
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
+		s.handleGetDataSet()).Methods("GET", "HEAD")
 
 	// POST a data set
 	r.HandleFunc("/resource/{path}", s.handlePostDataSet()).Methods("POST")

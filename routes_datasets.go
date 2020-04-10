@@ -1,33 +1,10 @@
 package main
 
 import (
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
-
-// GetDataSet implements the `GET Dataset` function of the soda4LCA service API
-func GetDataSet(w http.ResponseWriter, r *http.Request) {
-	stock := db.RootDataStock()
-	vars := mux.Vars(r)
-	switch path := vars["path"]; path {
-	case "processes":
-		getProcess(vars, stock, w)
-	case "flows":
-		getFlow(vars, stock, w)
-	case "flowproperties":
-		getFlowProperty(vars, stock, w)
-	case "unitgroups":
-		getUnitGroup(vars, stock, w)
-	case "contacts":
-		getContact(vars, stock, w)
-	case "sources":
-		getSource(vars, stock, w)
-	default:
-		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
-	}
-}
 
 // GetDataSets implements the `GET Datasets` function of the soda4LCA service API
 func GetDataSets(w http.ResponseWriter, r *http.Request) {
@@ -64,43 +41,4 @@ func GetDataSets(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
 	}
 	ServeXML(list, w)
-}
-
-// PostDataSet handles a post request of a data set.
-func PostDataSet(w http.ResponseWriter, r *http.Request) {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Could not read body "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	r.Body.Close()
-
-	var stock *DataStock
-	stockID := r.Header.Get("stock")
-	if stockID == "" {
-		stock = db.RootDataStock()
-	} else {
-		stock = db.DataStock(stockID)
-	}
-	if stock == nil {
-		http.Error(w, "Unknown data stock "+stockID, http.StatusBadRequest)
-		return
-	}
-
-	switch path := mux.Vars(r)["path"]; path {
-	case "processes":
-		postProcess(data, stock, w)
-	case "flows":
-		postFlow(data, stock, w)
-	case "flowproperties":
-		postFlowProperty(data, stock, w)
-	case "unitgroups":
-		postUnitGroup(data, stock, w)
-	case "contacts":
-		postContact(data, stock, w)
-	case "sources":
-		postSource(data, stock, w)
-	default:
-		http.Error(w, "Unknown path "+path, http.StatusBadRequest)
-	}
 }
