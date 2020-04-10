@@ -4,6 +4,16 @@ import (
 	"encoding/xml"
 )
 
+const (
+	processPath      = "processes"
+	flowPath         = "flows"
+	flowPropertyPath = "flowproperties"
+	unitGroupPath    = "unitgroups"
+	contactPath      = "contacts"
+	sourcePath       = "sources"
+	methodPath       = "lciamethods"
+)
+
 // DataStockList contains a list of data stocks. This type is used for XML
 // serialization.
 type DataStockList struct {
