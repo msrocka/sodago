@@ -42,3 +42,26 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 		ServeXML(&resp, w)
 	}
 }
+
+func (s *server) handleGetDataSet() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+		stockID := vars["datastock"]
+		path := vars["path"]
+		uid := vars["id"]
+		version := vars["version"]
+
+		data, err := s.dir.get(stockID, path, &indexEntry{
+			UUID:    uid,
+			Version: version,
+		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ServeXMLBytes(data, w)
+	}
+}

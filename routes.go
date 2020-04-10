@@ -27,10 +27,16 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 		})
 
 	// GET a single data set
-	r.HandleFunc("/resource/{path}/{id}", GetDataSet).
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Methods("GET", "HEAD")
-	r.HandleFunc("/resource/{path}/{id}", GetDataSet).
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Queries("version", "{version}").Methods("GET", "HEAD")
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
+		s.handleGetDataSet()).Methods("GET", "HEAD")
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
+		s.handleGetDataSet()).
+		Queries("version", "{version}").
+		Methods("GET", "HEAD")
 
 	// POST a data set
 	r.HandleFunc("/resource/{path}", s.handlePostDataSet()).Methods("POST")

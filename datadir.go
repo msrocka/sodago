@@ -185,3 +185,62 @@ func (dir *datadir) put(stockID string, path string, dataSet []byte) (*dataStock
 
 	return stock, nil
 }
+
+func (dir *datadir) get(stockID string, path string, entry *indexEntry) ([]byte, error) {
+
+	// check data stock and path
+	stock := dir.findDataStock(stockID)
+	if stock == nil {
+		return nil, errUnknownDataStock
+	}
+	if !isValidPath(path) {
+		return nil, errInvalidPath
+	}
+
+	// find the file
+	fileDir := filepath.Join(stock.dir, path)
+	if !fileExists(fileDir) {
+		return nil, errDataSetNotExists
+	}
+	file := ""
+	if entry.Version != "" {
+		file = entry.UUID + "_" + entry.Version + ".xml"
+	} else {
+
+		// if no version is given, we want the latest one
+		var version *Version
+		prefix := entry.UUID + "_"
+		files, err := ioutil.ReadDir(fileDir)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range files {
+			if !strings.HasPrefix(f.Name(), prefix) {
+				continue
+			}
+			v := ParseVersion(strings.TrimPrefix(
+				strings.TrimSuffix(f.Name(), ".xml"), prefix))
+			if file == "" ||
+				version == nil ||
+				v.NewerThan(version) {
+				file = f.Name()
+				version = v
+				continue
+			}
+		}
+	}
+
+	// read the file if it exists
+	if file == "" {
+		return nil, errDataSetNotExists
+	}
+	file = filepath.Join(fileDir, file)
+	if !fileExists(file) {
+		return nil, errDataSetNotExists
+	}
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
+}
