@@ -14,6 +14,22 @@ const (
 	methodPath       = "lciamethods"
 )
 
+func isValidPath(path string) bool {
+	switch path {
+	case
+		processPath,
+		flowPath,
+		flowPropertyPath,
+		unitGroupPath,
+		contactPath,
+		sourcePath,
+		methodPath:
+		return true
+
+	}
+	return false
+}
+
 // DataStockList contains a list of data stocks. This type is used for XML
 // serialization.
 type DataStockList struct {

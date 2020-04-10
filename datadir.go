@@ -18,6 +18,7 @@ type datadir struct {
 type dataStock struct {
 	dir string
 	uid string
+	idx *index
 }
 
 func fileExists(file string) bool {
@@ -47,6 +48,8 @@ func newDataDir(root string) (*datadir, error) {
 		if !file.IsDir() {
 			continue
 		}
+
+		// read the data stock ID
 		meta := filepath.Join(root, file.Name(), ".stock")
 		if !fileExists(meta) {
 			continue
@@ -56,10 +59,22 @@ func newDataDir(root string) (*datadir, error) {
 			return nil, err
 		}
 		uid := strings.TrimSpace(string(data))
+
 		stock := dataStock{
 			dir: filepath.Join(root, file.Name()),
 			uid: uid,
 		}
+
+		// read the index
+		idxFile := filepath.Join(stock.dir, "index.json")
+		if fileExists(idxFile) {
+			idx, err := readIndex(idxFile)
+			if err != nil {
+				return nil, err
+			}
+			stock.idx = idx
+		}
+
 		dir.dataStocks = append(dir.dataStocks, stock)
 		if file.Name() == "root" {
 			rootStock = &stock
@@ -100,4 +115,68 @@ func (dir *datadir) createDataStock(name string) (*dataStock, error) {
 	}
 
 	return &stock, nil
+}
+
+// Get the data stock with the given UUID. The UUID may be empty and we return
+// the root data stock in this case.
+func (dir *datadir) findDataStock(uid string) *dataStock {
+	for i := range dir.dataStocks {
+		stock := dir.dataStocks[i]
+		if stock.uid == uid {
+			return &stock
+		}
+		if uid == "" {
+			name := filepath.Base(stock.dir)
+			if name == "root" {
+				return &stock
+			}
+		}
+	}
+	return nil
+}
+
+func (dir *datadir) put(stockID string, path string, dataSet []byte) error {
+
+	// check data stock and path
+	stock := dir.findDataStock(stockID)
+	if stock == nil {
+		return errUnknownDataStock
+	}
+	if !isValidPath(path) {
+		return errInvalidPath
+	}
+
+	// check the index entry
+	entry, err := extractIndexEntry(path, dataSet)
+	if err != nil {
+		return errInvalidDataSet
+	}
+	if entry.UUID == "" || entry.Version == "" {
+		return errInvalidDataSet
+	}
+	if stock.idx != nil && stock.idx.contains(path, entry) {
+		return errDataSetExists
+	}
+
+	// store the file
+	file := filepath.Join(stock.dir, path,
+		entry.UUID+"_"+entry.Version+".xml")
+	if err := ioutil.WriteFile(file, dataSet, os.ModePerm); err != nil {
+		return err
+	}
+
+	// register the index entry
+	if stock.idx == nil {
+		stock.idx = &index{}
+	}
+	if stock.idx.Entries == nil {
+		stock.idx.Entries = make(map[string][]*indexEntry)
+	}
+	stock.idx.Entries[path] = append(stock.idx.Entries[path], entry)
+	idxFile := filepath.Join(stock.dir, "index.json")
+	if err := stock.idx.save(idxFile); err != nil {
+		return err
+	}
+
+	return nil
 }
