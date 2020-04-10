@@ -33,7 +33,7 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 		Queries("version", "{version}").Methods("GET", "HEAD")
 
 	// POST a data set
-	r.HandleFunc("/resource/{path}", PostDataSet).Methods("POST")
+	r.HandleFunc("/resource/{path}", s.handlePostDataSet()).Methods("POST")
 
 	// GET  a list of data sets
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}", GetDataSets).Methods("GET")

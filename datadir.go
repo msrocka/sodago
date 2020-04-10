@@ -135,34 +135,39 @@ func (dir *datadir) findDataStock(uid string) *dataStock {
 	return nil
 }
 
-func (dir *datadir) put(stockID string, path string, dataSet []byte) error {
+func (dir *datadir) put(stockID string, path string, dataSet []byte) (*dataStock, error) {
 
 	// check data stock and path
 	stock := dir.findDataStock(stockID)
 	if stock == nil {
-		return errUnknownDataStock
+		return nil, errUnknownDataStock
 	}
 	if !isValidPath(path) {
-		return errInvalidPath
+		return nil, errInvalidPath
 	}
 
 	// check the index entry
 	entry, err := extractIndexEntry(path, dataSet)
 	if err != nil {
-		return errInvalidDataSet
+		return nil, errInvalidDataSet
 	}
 	if entry.UUID == "" || entry.Version == "" {
-		return errInvalidDataSet
+		return nil, errInvalidDataSet
 	}
 	if stock.idx != nil && stock.idx.contains(path, entry) {
-		return errDataSetExists
+		return nil, errDataSetExists
 	}
 
 	// store the file
-	file := filepath.Join(stock.dir, path,
-		entry.UUID+"_"+entry.Version+".xml")
+	fileDir := filepath.Join(stock.dir, path)
+	if !fileExists(fileDir) {
+		if err := os.MkdirAll(fileDir, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
+	file := filepath.Join(fileDir, entry.UUID+"_"+entry.Version+".xml")
 	if err := ioutil.WriteFile(file, dataSet, os.ModePerm); err != nil {
-		return err
+		return nil, err
 	}
 
 	// register the index entry
@@ -175,8 +180,8 @@ func (dir *datadir) put(stockID string, path string, dataSet []byte) error {
 	stock.idx.Entries[path] = append(stock.idx.Entries[path], entry)
 	idxFile := filepath.Join(stock.dir, "index.json")
 	if err := stock.idx.save(idxFile); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return stock, nil
 }
