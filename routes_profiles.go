@@ -21,12 +21,12 @@ func GetProfileDescriptors(w http.ResponseWriter, r *http.Request) {
 	dir := "data/profiles"
 	info, err := os.Stat(dir)
 	if err != nil || !info.IsDir() {
-		ServeJSONBytes([]byte("[]"), w)
+		writeBytesJSON([]byte("[]"), w)
 		return
 	}
 	files, err := ioutil.ReadDir("data/profiles")
 	if err != nil {
-		ServeJSONBytes([]byte("[]"), w)
+		writeBytesJSON([]byte("[]"), w)
 		return
 	}
 	profiles := make([]*Profile, 0)
@@ -42,7 +42,7 @@ func GetProfileDescriptors(w http.ResponseWriter, r *http.Request) {
 		}
 		profiles = append(profiles, p)
 	}
-	ServeJSON(profiles, w)
+	writeJSON(profiles, w)
 }
 
 // GetProfile returns an EPD profile for a given ID.
@@ -58,5 +58,5 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	ServeJSONBytes(data, w)
+	writeBytesJSON(data, w)
 }

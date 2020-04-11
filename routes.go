@@ -82,6 +82,6 @@ func (s *server) handleGetDataStocks() http.HandlerFunc {
 				Name:      name,
 			})
 		}
-		ServeXML(&resp, w)
+		writeXML(&resp, w)
 	}
 }

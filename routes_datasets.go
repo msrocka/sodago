@@ -40,7 +40,7 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 			ShortName: stockName,
 			Name:      stockName,
 		}
-		ServeXML(&resp, w)
+		writeXML(&resp, w)
 	}
 }
 
@@ -63,7 +63,7 @@ func (s *server) handleGetDataSet() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		ServeXMLBytes(data, w)
+		writeBytesXML(data, w)
 	}
 }
 
@@ -135,12 +135,12 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 
 		resp := response{}
 		if stock.idx == nil || stock.idx.Entries == nil {
-			ServeXML(&resp, w)
+			writeXML(&resp, w)
 			return
 		}
 		entries, ok := stock.idx.Entries[path]
 		if !ok {
-			ServeXML(&resp, w)
+			writeXML(&resp, w)
 			return
 		}
 
@@ -170,6 +170,6 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 			}
 		}
 
-		ServeXML(&resp, w)
+		writeXML(&resp, w)
 	}
 }
