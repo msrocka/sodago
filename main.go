@@ -5,16 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
-var db *DB
 var cookieStore *sessions.CookieStore
 
 type server struct {
@@ -34,30 +31,8 @@ func main() {
 	os.MkdirAll(args.DataDir, os.ModePerm)
 	initCookieStore(args)
 
-	// initialize the database
-	log.Println("initialize data in:", args.DataDir)
-	db, err = InitDB(args.DataDir)
-	if err != nil {
-		log.Fatal("Failed to initialize database", err)
-	}
-	db.RootDataStock()
-
 	r := mux.NewRouter()
 	server.registerRoutes(r, args)
-
-	log.Println("Register shutdown routines")
-	ossignals := make(chan os.Signal)
-	signal.Notify(ossignals, syscall.SIGTERM)
-	signal.Notify(ossignals, syscall.SIGINT)
-	go func() {
-		<-ossignals
-		log.Println("Shutdown server")
-		err := db.Close()
-		if err != nil {
-			log.Fatal("Failed to close database", err)
-		}
-		os.Exit(0)
-	}()
 
 	log.Println("Starting server at port:", args.Port)
 	http.ListenAndServe(":"+args.Port, r)

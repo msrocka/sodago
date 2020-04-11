@@ -22,8 +22,8 @@ http://localhost/resource/flows/a2b32f97-3fc7-4af2-b209-525bc6426f33
 http://localhost/resource/datastocks/982aa819-c7bc-4f89-97c2-783606f7fa66/flows/a2b32f97-3fc7-4af2-b209-525bc6426f33?version=30.00.000
 
 TODO:
-* get data set list: move types into function scopes
 * remove db and unused modules
+* external docs
 * put types to lower case (e.g. Version)
 * simple search
 * LCIA methods
