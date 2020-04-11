@@ -4,59 +4,67 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 )
 
-// Profile contains information of an EPD profile.
-type Profile struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func (s *server) handleGetProfiles() http.HandlerFunc {
+
+	type profile struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		dir := filepath.Join(s.dir.root, "profiles")
+		if !fileExists(dir) {
+			writeBytesJSON([]byte("[]"), w)
+			return
+		}
+
+		files, err := ioutil.ReadDir(dir)
+		if err != nil {
+			http.Error(w, "server error: "+err.Error(),
+				http.StatusInternalServerError)
+			return
+		}
+
+		profiles := make([]*profile, 0)
+		for _, file := range files {
+			data, err := ioutil.ReadFile(dir + "/" + file.Name())
+			if err != nil {
+				http.Error(w, "server error: "+err.Error(),
+					http.StatusInternalServerError)
+				return
+			}
+			p := &profile{}
+			if err := json.Unmarshal(data, p); err != nil {
+				http.Error(w, "server error: "+err.Error(),
+					http.StatusInternalServerError)
+				return
+			}
+			profiles = append(profiles, p)
+		}
+		writeJSON(profiles, w)
+	}
 }
 
-// GetProfileDescriptors returns a JSON array with the EPD profile descriptors
-// from the server.
-func GetProfileDescriptors(w http.ResponseWriter, r *http.Request) {
-	dir := "data/profiles"
-	info, err := os.Stat(dir)
-	if err != nil || !info.IsDir() {
-		writeBytesJSON([]byte("[]"), w)
-		return
-	}
-	files, err := ioutil.ReadDir("data/profiles")
-	if err != nil {
-		writeBytesJSON([]byte("[]"), w)
-		return
-	}
-	profiles := make([]*Profile, 0)
-	for _, file := range files {
-		data, err := ioutil.ReadFile(dir + "/" + file.Name())
-		if err != nil {
-			continue
-		}
-		p := &Profile{}
-		err = json.Unmarshal(data, p)
-		if err != nil {
-			continue
-		}
-		profiles = append(profiles, p)
-	}
-	writeJSON(profiles, w)
-}
+func (s *server) handleGetProfile() http.HandlerFunc {
 
-// GetProfile returns an EPD profile for a given ID.
-func GetProfile(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
-	path := "data/profiles/" + id + ".json"
-	if _, err := os.Stat(path); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		file := filepath.Join(s.dir.root, "profiles", id+".json")
+		if !fileExists(file) {
+			http.Error(w, "Profile "+id+"does not exist", http.StatusNotFound)
+			return
+		}
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			http.Error(w, "server error: "+err.Error(),
+				http.StatusInternalServerError)
+			return
+		}
+		writeBytesJSON(data, w)
 	}
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	writeBytesJSON(data, w)
 }
