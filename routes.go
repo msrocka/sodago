@@ -49,6 +49,8 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 	r.HandleFunc("/resource/{path}", s.handlePostDataSet()).Methods("POST")
 
 	// GET  a list of data sets
-	r.HandleFunc("/resource/datastocks/{datastock}/{path}", GetDataSets).Methods("GET")
-	r.HandleFunc("/resource/{path}", GetDataSets).Methods("GET")
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}",
+		s.handleGetDataSets()).Methods("GET")
+	r.HandleFunc("/resource/{path}",
+		s.handleGetDataSets()).Methods("GET")
 }
