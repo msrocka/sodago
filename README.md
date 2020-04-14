@@ -27,10 +27,9 @@ Each profile is stored in a separate JSON file where the name has the
 following pattern: `<profile ID>.json`
 
 TODO:
-* external docs
+* implement: GET [/sources/{uuid}/digitalfile](https://bitbucket.org/okusche/soda4lca/src/c78970a1d3ddaf855745b938082cee9cac1363e7/Doc/src/Service_API/Service_API_Dataset_Source_GET_DigitalFile.md)
 * put types to lower case (e.g. Version)
+* normalize versions (1 == 1.00 == 1.00.000)
 * simple search
 * LCIA methods
 * write lock via simple mutex
-* simple user management?
-* commands: datastock, user, serve,

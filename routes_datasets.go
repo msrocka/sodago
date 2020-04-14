@@ -27,12 +27,17 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 		r.Body.Close()
 		stockID := r.Header.Get("stock")
 		path := mux.Vars(r)["path"]
+
+		// save the data set
+		s.mutex.Lock()
 		stock, err := s.dir.put(stockID, path, data)
+		s.mutex.Unlock()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		// return the data stock on success
 		stockName := filepath.Base(stock.dir)
 		resp := response{
 			IsRoot:    stockName == "root",

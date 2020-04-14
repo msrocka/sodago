@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
@@ -15,7 +16,8 @@ import (
 var cookieStore *sessions.CookieStore
 
 type server struct {
-	dir *datadir
+	dir   *datadir
+	mutex sync.Mutex
 }
 
 func main() {

@@ -74,6 +74,10 @@ func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 			return vals[0]
 		}
 
+		// lock the mutex until this method is ready
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
+
 		// try to read the source
 		sourceXML := first(r.Form["file"])
 		if sourceXML == "" {
