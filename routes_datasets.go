@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gorilla/mux"
@@ -41,6 +42,82 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 			Name:      stockName,
 		}
 		writeXML(&resp, w)
+	}
+}
+
+func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseMultipartForm(32 << 20); err != nil {
+			http.Error(w, "failed to parse multi-part form: "+err.Error(),
+				http.StatusBadRequest)
+			return
+		}
+
+		// try to read the source
+		source, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "failed to get `file` param: "+err.Error(),
+				http.StatusBadRequest)
+			return
+		}
+		defer source.Close()
+		data, err := ioutil.ReadAll(source)
+		if err != nil {
+			http.Error(w, "failed to read `file` param: "+err.Error(),
+				http.StatusBadRequest)
+			return
+		}
+
+		// extract the source info
+		sourceInfo, err := extractIndexEntry(sourcePath, data)
+		if err != nil {
+			http.Error(w, "failed to read `file` param: "+err.Error(),
+				http.StatusBadRequest)
+			return
+		}
+
+		// try to save the source
+		stockID := r.Header.Get("stock")
+		stock, err := s.dir.put(stockID, sourcePath, data)
+		if err != nil {
+			http.Error(w, "failed to store source: "+err.Error(),
+				http.StatusBadRequest)
+			return
+		}
+
+		// create the folder for external documents of that source
+		dir := filepath.Join(stock.dir, "external_docs", sourceInfo.UUID)
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// save the uploaded files
+		for f := range r.MultipartForm.File {
+			if f == "file" {
+				continue
+			}
+			file, _, err := r.FormFile(f)
+			if err != nil {
+				http.Error(w, "failed to get file param: "+err.Error(),
+					http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
+			data, err := ioutil.ReadAll(file)
+			if err != nil {
+				http.Error(w, "failed to read file param: "+err.Error(),
+					http.StatusBadRequest)
+				return
+			}
+			path := filepath.Join(dir, f)
+			if err := ioutil.WriteFile(path, data, os.ModePerm); err != nil {
+				http.Error(w, "failed to write file: "+err.Error(),
+					http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 }
 

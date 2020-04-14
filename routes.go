@@ -10,13 +10,15 @@ import (
 
 func (s *server) registerRoutes(r *mux.Router, args *Args) {
 
-	// data stocks
+	// GET data stocks
 	r.HandleFunc("/resource/datastocks",
 		s.handleGetDataStocks()).Methods("GET")
 
 	// profiles
+	// GET profile
 	r.HandleFunc("/resource/profiles/{id}",
 		s.handleGetProfile()).Methods("GET")
+	// GET profiles
 	r.HandleFunc("/resource/profiles",
 		s.handleGetProfiles()).Methods("GET")
 
@@ -49,6 +51,8 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 		s.handleGetDataSet()).Methods("GET", "HEAD")
 
 	// POST a data set
+	r.HandleFunc("/resource/sources/withBinaries",
+		s.handlePostSourceWithFiles()).Methods("POST")
 	r.HandleFunc("/resource/{path}",
 		s.handlePostDataSet()).Methods("POST")
 
