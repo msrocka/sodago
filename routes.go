@@ -40,6 +40,12 @@ func (s *server) registerRoutes(r *mux.Router, args *Args) {
 		s.handleGetDataSet()).
 		Methods("GET", "HEAD")
 
+	// GET a digital/external file of a source
+	r.HandleFunc("/resource/datastocks/{datastock}/sources/{id}/{file}",
+		s.handleGetExternalFile()).Methods("GET", "HEAD")
+	r.HandleFunc("/resource/sources/{id}/{file}",
+		s.handleGetExternalFile()).Methods("GET", "HEAD")
+
 	// GET a single data set from a data stock
 	// specific version
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
