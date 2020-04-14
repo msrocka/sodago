@@ -47,6 +47,13 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 
 func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 
+	type response struct {
+		IsRoot    bool   `xml:"root,attr"`
+		ID        string `xml:"uuid"`
+		ShortName string `xml:"shortName"`
+		Name      string `xml:"name"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(32 << 20); err != nil {
 			http.Error(w, "failed to parse multi-part form: "+err.Error(),
@@ -54,23 +61,23 @@ func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 			return
 		}
 
-		// try to read the source
-		source, _, err := r.FormFile("file")
-		if err != nil {
-			http.Error(w, "failed to get `file` param: "+err.Error(),
-				http.StatusBadRequest)
-			return
-		}
-		defer source.Close()
-		data, err := ioutil.ReadAll(source)
-		if err != nil {
-			http.Error(w, "failed to read `file` param: "+err.Error(),
-				http.StatusBadRequest)
-			return
+		first := func(vals []string) string {
+			if len(vals) == 0 {
+				return ""
+			}
+			return vals[0]
 		}
 
+		// try to read the source
+		sourceXML := first(r.Form["file"])
+		if sourceXML == "" {
+			http.Error(w, "no source XML stored in `file`", http.StatusBadRequest)
+			return
+		}
+		source := []byte(sourceXML)
+
 		// extract the source info
-		sourceInfo, err := extractIndexEntry(sourcePath, data)
+		sourceInfo, err := extractIndexEntry(sourcePath, source)
 		if err != nil {
 			http.Error(w, "failed to read `file` param: "+err.Error(),
 				http.StatusBadRequest)
@@ -78,8 +85,8 @@ func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 		}
 
 		// try to save the source
-		stockID := r.Header.Get("stock")
-		stock, err := s.dir.put(stockID, sourcePath, data)
+		stockID := first(r.Form["stock"])
+		stock, err := s.dir.put(stockID, sourcePath, source)
 		if err != nil {
 			http.Error(w, "failed to store source: "+err.Error(),
 				http.StatusBadRequest)
@@ -94,30 +101,32 @@ func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 		}
 
 		// save the uploaded files
-		for f := range r.MultipartForm.File {
+		for f := range r.Form {
 			if f == "file" {
 				continue
 			}
-			file, _, err := r.FormFile(f)
-			if err != nil {
-				http.Error(w, "failed to get file param: "+err.Error(),
-					http.StatusBadRequest)
-				return
-			}
-			defer file.Close()
-			data, err := ioutil.ReadAll(file)
-			if err != nil {
-				http.Error(w, "failed to read file param: "+err.Error(),
-					http.StatusBadRequest)
-				return
+			str := first(r.Form[f])
+			if str == "" {
+				continue
 			}
 			path := filepath.Join(dir, f)
+			data := []byte(str)
 			if err := ioutil.WriteFile(path, data, os.ModePerm); err != nil {
 				http.Error(w, "failed to write file: "+err.Error(),
 					http.StatusInternalServerError)
 				return
 			}
 		}
+
+		// finally, write the data stock as response
+		stockName := filepath.Base(stock.dir)
+		resp := response{
+			IsRoot:    stockName == "root",
+			ID:        stock.uid,
+			ShortName: stockName,
+			Name:      stockName,
+		}
+		writeXML(&resp, w)
 	}
 }
 
