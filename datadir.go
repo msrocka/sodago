@@ -121,14 +121,14 @@ func (dir *datadir) createDataStock(name string) (*dataStock, error) {
 // the root data stock in this case.
 func (dir *datadir) findDataStock(uid string) *dataStock {
 	for i := range dir.dataStocks {
-		stock := dir.dataStocks[i]
+		stock := &dir.dataStocks[i]
 		if stock.uid == uid {
-			return &stock
+			return stock
 		}
 		if uid == "" {
 			name := filepath.Base(stock.dir)
 			if name == "root" {
-				return &stock
+				return stock
 			}
 		}
 	}
