@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,9 +17,9 @@ import (
 var cookieStore *sessions.CookieStore
 
 type server struct {
-	args  Args
-	dir   *datadir
-	mutex sync.Mutex
+	config *Config
+	dir    *datadir
+	mutex  sync.Mutex
 }
 
 func main() {
@@ -34,7 +35,13 @@ func main() {
 	}
 
 	args := ParseArgs()
-	server := server{}
+	config, err := ReadConfig(args)
+	if err != nil {
+		fmt.Println("ERROR: failed to read config", err)
+		return
+	}
+
+	server := server{config: config}
 	dir, err := newDataDir("data")
 	if err != nil {
 		log.Fatalln("failed to init data folder", err)

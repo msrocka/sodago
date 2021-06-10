@@ -3,9 +3,9 @@ package main
 import "errors"
 
 var (
-	errUnknownDataStock = errors.New("Unknown data stock")
-	errInvalidPath      = errors.New("Invalid path")
-	errInvalidDataSet   = errors.New("Invalid data set")
-	errDataSetExists    = errors.New("Data set already exists")
-	errDataSetNotExists = errors.New("Data set does not exist")
+	errUnknownDataStock = errors.New("unknown data stock")
+	errInvalidPath      = errors.New("invalid path")
+	errInvalidDataSet   = errors.New("invalid data set")
+	errDataSetExists    = errors.New("data set already exists")
+	errDataSetNotExists = errors.New("data set does not exist")
 )
