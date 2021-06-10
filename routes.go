@@ -22,12 +22,10 @@ func (s *server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/resource/profiles",
 		s.handleGetProfiles()).Methods("GET")
 
-	// login: currently nothing is checked here
+	// login
 	r.HandleFunc("/resource/authenticate/login",
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("Logged in"))
-		})
+		s.handleGetLogin()).
+		Queries("userName", "{user}", "password", "{password}")
 
 	// GET a single data set from the root data stock
 	// specific version

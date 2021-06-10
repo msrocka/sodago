@@ -92,6 +92,7 @@ func AddUser() {
 	existing := config.GetUser(name)
 	if existing != nil {
 		fmt.Println("ERROR: a user", name, "already exists")
+		return
 	}
 
 	// update the configuration

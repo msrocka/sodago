@@ -14,12 +14,11 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-var cookieStore *sessions.CookieStore
-
 type server struct {
-	config *Config
-	dir    *datadir
-	mutex  sync.Mutex
+	config  *Config
+	dir     *datadir
+	cookies *sessions.CookieStore
+	mutex   sync.Mutex
 }
 
 func main() {
@@ -41,7 +40,10 @@ func main() {
 		return
 	}
 
-	server := server{config: config}
+	server := server{
+		config:  config,
+		cookies: initCookieStore(args),
+	}
 	dir, err := newDataDir("data")
 	if err != nil {
 		log.Fatalln("failed to init data folder", err)
@@ -58,7 +60,7 @@ func main() {
 	http.ListenAndServe(":"+args.Port(), r)
 }
 
-func initCookieStore(args Args) {
+func initCookieStore(args Args) *sessions.CookieStore {
 	log.Println("Init cookie store ...")
 	keyPath := filepath.Join(args.DataDir(), "cookie_auth.key")
 	_, err := os.Stat(keyPath)
@@ -78,5 +80,5 @@ func initCookieStore(args Args) {
 			log.Fatalln("Failed to read", keyPath, ": ", err)
 		}
 	}
-	cookieStore = sessions.NewCookieStore(key)
+	return sessions.NewCookieStore(key)
 }
