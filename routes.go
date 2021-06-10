@@ -29,16 +29,16 @@ func (s *server) registerRoutes(r *mux.Router) {
 		s.handleGetAuthenticationStatus())
 
 	// GET a single data set from the root data stock
+	// get an overview
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSetOverview()).
+		Queries("view", "overview").
+		Methods("GET", "HEAD")
 	// specific version
 	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Queries("version", "{version}").
 		Methods("GET", "HEAD")
 	// the latest version
 	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
-		Methods("GET", "HEAD")
-	// get an overview
-	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSetOverview()).
-		Queries("view", "overview").
 		Methods("GET", "HEAD")
 
 	// GET a digital/external file of a source
@@ -48,6 +48,11 @@ func (s *server) registerRoutes(r *mux.Router) {
 		s.handleGetExternalFile()).Methods("GET", "HEAD")
 
 	// GET a single data set from a data stock
+	// get an overview
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
+		s.handleGetDataSetOverview()).
+		Queries("view", "overview").
+		Methods("GET", "HEAD")
 	// specific version
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
 		s.handleGetDataSet()).
@@ -56,11 +61,6 @@ func (s *server) registerRoutes(r *mux.Router) {
 	// the latest version
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
 		s.handleGetDataSet()).Methods("GET", "HEAD")
-	// get an overview
-	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
-		s.handleGetDataSetOverview()).
-		Queries("view", "overview").
-		Methods("GET", "HEAD")
 
 	// POST a data set
 	r.HandleFunc("/resource/sources/withBinaries",
