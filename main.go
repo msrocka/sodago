@@ -16,12 +16,24 @@ import (
 var cookieStore *sessions.CookieStore
 
 type server struct {
+	args  Args
 	dir   *datadir
 	mutex sync.Mutex
 }
 
 func main() {
 
+	// first check if a specific command was called
+	osArgs := os.Args
+	if len(osArgs) > 1 {
+		cmd := osArgs[1]
+		if cmd == "add-user" {
+			AddUser()
+			return
+		}
+	}
+
+	args := ParseArgs()
 	server := server{}
 	dir, err := newDataDir("data")
 	if err != nil {
@@ -29,20 +41,19 @@ func main() {
 	}
 	server.dir = dir
 
-	args := GetArgs()
-	os.MkdirAll(args.DataDir, os.ModePerm)
+	os.MkdirAll(args.DataDir(), os.ModePerm)
 	initCookieStore(args)
 
 	r := mux.NewRouter()
-	server.registerRoutes(r, args)
+	server.registerRoutes(r)
 
-	log.Println("Starting server at port:", args.Port)
-	http.ListenAndServe(":"+args.Port, r)
+	log.Println("Starting server at port:", args.Port())
+	http.ListenAndServe(":"+args.Port(), r)
 }
 
-func initCookieStore(args *Args) {
+func initCookieStore(args Args) {
 	log.Println("Init cookie store ...")
-	keyPath := filepath.Join(args.DataDir, "cookie_auth.key")
+	keyPath := filepath.Join(args.DataDir(), "cookie_auth.key")
 	_, err := os.Stat(keyPath)
 	if err != nil && !os.IsNotExist(err) {
 		log.Fatalln("Cannot access cookie key at", keyPath, err)

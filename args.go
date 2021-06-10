@@ -5,40 +5,14 @@ import (
 	"strings"
 )
 
-// Args contains the command line arguments of the server application. All
-// arguments are optional and should have reasonable default values.
-type Args struct {
+// Args contains the command line arguments as key value pairs. In sodago this
+// is handled quite simple: in the command line a key is identified via a hyphen
+// prefix (`-`) followed by the corresponding value (e.g. `-data ./data -port
+// 8080`).
+type Args map[string]string
 
-	// A path to a folder that contains the data files.
-	DataDir string
-
-	// The port that is used for the HTTP server.
-	Port string
-}
-
-// GetArgs returns the programm arguments of the server application.
-func GetArgs() *Args {
-	args := Args{
-		DataDir: "data",
-		Port:    "80"}
-	for flag, arg := range readArgs() {
-		switch flag {
-		case "-data":
-			args.DataDir = arg
-		case "-port":
-			args.Port = arg
-		}
-	}
-	// If the server runs in Cloud Foundry we need
-	// to bind the port to the PORT environment variable
-	port := os.Getenv("PORT")
-	if port != "" {
-		args.Port = port
-	}
-	return &args
-}
-
-func readArgs() map[string]string {
+// ParseArgs parses the command line arguments
+func ParseArgs() Args {
 	args := make(map[string]string)
 	if len(os.Args) < 2 {
 		return args
@@ -59,4 +33,21 @@ func readArgs() map[string]string {
 		}
 	}
 	return args
+}
+
+func (args Args) GetOrDefault(key, defaultValue string) string {
+	val, ok := args[key]
+	if !ok {
+		return defaultValue
+	} else {
+		return val
+	}
+}
+
+func (args Args) DataDir() string {
+	return args.GetOrDefault("-data", "data")
+}
+
+func (args Args) Port() string {
+	return args.GetOrDefault("-port", "8080")
 }

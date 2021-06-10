@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *server) registerRoutes(r *mux.Router, args *Args) {
+func (s *server) registerRoutes(r *mux.Router) {
 
 	// GET data stocks
 	r.HandleFunc("/resource/datastocks",
