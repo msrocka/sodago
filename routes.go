@@ -36,7 +36,10 @@ func (s *server) registerRoutes(r *mux.Router) {
 	// the latest version
 	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Methods("GET", "HEAD")
-	// get an descriptor
+	// get an overview
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSetOverview()).
+		Queries("view", "overview").
+		Methods("GET", "HEAD")
 
 	// GET a digital/external file of a source
 	r.HandleFunc("/resource/datastocks/{datastock}/sources/{id}/{file}",
@@ -53,6 +56,11 @@ func (s *server) registerRoutes(r *mux.Router) {
 	// the latest version
 	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
 		s.handleGetDataSet()).Methods("GET", "HEAD")
+	// get an overview
+	r.HandleFunc("/resource/datastocks/{datastock}/{path}/{id}",
+		s.handleGetDataSetOverview()).
+		Queries("view", "overview").
+		Methods("GET", "HEAD")
 
 	// POST a data set
 	r.HandleFunc("/resource/sources/withBinaries",

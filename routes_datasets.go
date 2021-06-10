@@ -79,12 +79,12 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 		vars := mux.Vars(r)
 		stock := s.dir.findDataStock(vars["datastock"])
 		if stock == nil {
-			http.Error(w, "Unknown data stock", http.StatusBadRequest)
+			http.Error(w, "unknown data stock", http.StatusBadRequest)
 			return
 		}
 		path := vars["path"]
 		if !isValidPath(path) {
-			http.Error(w, "Invalid path", http.StatusBadRequest)
+			http.Error(w, "invalid path", http.StatusBadRequest)
 			return
 		}
 
@@ -127,4 +127,84 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 
 		writeXML(&resp, w)
 	}
+}
+
+func (s *server) handleGetDataSetOverview() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+
+		// select the data stock
+		stock := s.dir.findDataStock(vars["datastock"])
+		if stock == nil {
+			http.Error(w, "unknown data stock", http.StatusBadRequest)
+			return
+		}
+
+		// select the index entries
+		path := vars["path"]
+		if !isValidPath(path) {
+			http.Error(w, "invalid path", http.StatusBadRequest)
+			return
+		}
+		entries, ok := stock.idx.Entries[path]
+		if !ok {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		// find the entry
+		uid := vars["id"]
+		if uid == "" {
+			http.Error(w, "no data set ID given", http.StatusBadRequest)
+			return
+		}
+		var entry *indexEntry
+		var version *Version
+		for i := range entries {
+			e := entries[i]
+			if e.UUID != uid {
+				continue
+			}
+			v := ParseVersion(e.Version)
+			if entry == nil || v.NewerThan(version) {
+				entry = e
+				version = v
+			}
+		}
+		if entry == nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
+		base := BaseDescriptor{
+			UUID:    uid,
+			Name:    entry.Name,
+			Version: version.String(),
+		}
+
+		switch path {
+		case contactPath:
+			writeXML(&ContactDescriptor{BaseDescriptor: base}, w)
+		case flowPath:
+			writeXML(&FlowDescriptor{BaseDescriptor: base}, w)
+		case flowPropertyPath:
+			writeXML(&FlowPropertyDescriptor{BaseDescriptor: base}, w)
+		case methodPath:
+			writeXML(&ImpactCategoryDescriptor{BaseDescriptor: base}, w)
+		case processPath:
+			writeXML(&ProcessDescriptor{BaseDescriptor: base}, w)
+		case sourcePath:
+			writeXML(&SourceDescriptor{BaseDescriptor: base}, w)
+		case unitGroupPath:
+			writeXML(&UnitGroupDescriptor{BaseDescriptor: base}, w)
+
+		default:
+			http.Error(
+				w, "unknown path: "+path, http.StatusInternalServerError)
+		}
+
+	}
+
 }

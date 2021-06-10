@@ -1,13 +1,13 @@
 package main
 
 const (
-	processPath      = "processes"
+	contactPath      = "contacts"
 	flowPath         = "flows"
 	flowPropertyPath = "flowproperties"
-	unitGroupPath    = "unitgroups"
-	contactPath      = "contacts"
-	sourcePath       = "sources"
 	methodPath       = "lciamethods"
+	processPath      = "processes"
+	sourcePath       = "sources"
+	unitGroupPath    = "unitgroups"
 )
 
 func isValidPath(path string) bool {
@@ -21,7 +21,6 @@ func isValidPath(path string) bool {
 		sourcePath,
 		methodPath:
 		return true
-
 	}
 	return false
 }

@@ -38,15 +38,21 @@ type SourceDescriptor struct {
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
 }
 
+type ImpactCategoryDescriptor struct {
+	BaseDescriptor
+	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/LCIAMethod LCIAMethod"`
+}
+
 type DescriptorList struct {
-	XMLName    xml.Name                 `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetList"`
-	TotalSize  int                      `xml:"totalSize,attr"`
-	StartIndex int                      `xml:"startIndex,attr"`
-	PageSize   int                      `xml:"pageSize,attr"`
-	Processes  []ProcessDescriptor      `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
-	Flows      []FlowDescriptor         `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
-	FlowProps  []FlowPropertyDescriptor `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`
-	UnitGroups []UnitGroupDescriptor    `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/UnitGroup unitGroup"`
-	Contacts   []ContactDescriptor      `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Contact contact"`
-	Sources    []SourceDescriptor       `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
+	XMLName          xml.Name                   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetList"`
+	TotalSize        int                        `xml:"totalSize,attr"`
+	StartIndex       int                        `xml:"startIndex,attr"`
+	PageSize         int                        `xml:"pageSize,attr"`
+	Processes        []ProcessDescriptor        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
+	Flows            []FlowDescriptor           `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
+	FlowProps        []FlowPropertyDescriptor   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`
+	UnitGroups       []UnitGroupDescriptor      `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/UnitGroup unitGroup"`
+	Contacts         []ContactDescriptor        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Contact contact"`
+	Sources          []SourceDescriptor         `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
+	ImpactCategories []ImpactCategoryDescriptor `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/LCIAMethod LCIAMethod"`
 }
