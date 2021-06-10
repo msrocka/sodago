@@ -22,7 +22,7 @@ func ParseVersion(text string) *Version {
 	addPart := func() {
 		i := 0
 		if buf.Len() > 0 {
-			s := string(buf.Bytes())
+			s := buf.String()
 			i, _ = strconv.Atoi(s)
 		}
 		switch part {
