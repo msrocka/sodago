@@ -17,7 +17,7 @@ import (
 type User struct {
 	Name  string   `json:"user"`
 	Hash  string   `json:"hash"`
-	Roles []string `json:"roles"`
+	Roles []string `json:"roles,omitempty"`
 }
 
 // Config holds the configuration of the users and data stocks.

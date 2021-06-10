@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -74,55 +73,6 @@ func (s *server) handleGetDataSet() http.HandlerFunc {
 
 func (s *server) handleGetDataSets() http.HandlerFunc {
 
-	type base struct {
-		UUID    string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI uuid"`
-		Version string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetVersion"`
-		Name    string `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI name"`
-	}
-
-	type process struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
-	}
-
-	type flow struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
-	}
-
-	type flowProp struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`
-	}
-
-	type unitGroup struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/UnitGroup unitGroup"`
-	}
-
-	type contact struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Contact contact"`
-	}
-
-	type source struct {
-		base
-		XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
-	}
-
-	type response struct {
-		XMLName    xml.Name    `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetList"`
-		TotalSize  int         `xml:"totalSize,attr"`
-		StartIndex int         `xml:"startIndex,attr"`
-		PageSize   int         `xml:"pageSize,attr"`
-		Processes  []process   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
-		Flows      []flow      `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
-		FlowProps  []flowProp  `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`
-		UnitGroups []unitGroup `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/UnitGroup unitGroup"`
-		Contacts   []contact   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Contact contact"`
-		Sources    []source    `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Source source"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// check data stock and path
@@ -138,7 +88,7 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 			return
 		}
 
-		resp := response{}
+		resp := DescriptorList{}
 		if stock.idx == nil || stock.idx.Entries == nil {
 			writeXML(&resp, w)
 			return
@@ -154,24 +104,24 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 		resp.StartIndex = 0
 
 		for _, e := range entries {
-			base := base{
+			base := BaseDescriptor{
 				UUID:    e.UUID,
 				Name:    e.Name,
 				Version: e.Version,
 			}
 			switch path {
 			case processPath:
-				resp.Processes = append(resp.Processes, process{base: base})
+				resp.Processes = append(resp.Processes, ProcessDescriptor{BaseDescriptor: base})
 			case flowPath:
-				resp.Flows = append(resp.Flows, flow{base: base})
+				resp.Flows = append(resp.Flows, FlowDescriptor{BaseDescriptor: base})
 			case flowPropertyPath:
-				resp.FlowProps = append(resp.FlowProps, flowProp{base: base})
+				resp.FlowProps = append(resp.FlowProps, FlowPropertyDescriptor{BaseDescriptor: base})
 			case unitGroupPath:
-				resp.UnitGroups = append(resp.UnitGroups, unitGroup{base: base})
+				resp.UnitGroups = append(resp.UnitGroups, UnitGroupDescriptor{BaseDescriptor: base})
 			case contactPath:
-				resp.Contacts = append(resp.Contacts, contact{base: base})
+				resp.Contacts = append(resp.Contacts, ContactDescriptor{BaseDescriptor: base})
 			case sourcePath:
-				resp.Sources = append(resp.Sources, source{base: base})
+				resp.Sources = append(resp.Sources, SourceDescriptor{BaseDescriptor: base})
 			}
 		}
 

@@ -23,22 +23,20 @@ func (s *server) registerRoutes(r *mux.Router) {
 		s.handleGetProfiles()).Methods("GET")
 
 	// authentication
-	r.HandleFunc("/resource/authenticate/login",
-		s.handleGetLogin()).
+	r.HandleFunc("/resource/authenticate/login", s.handleGetLogin()).
 		Queries("userName", "{user}", "password", "{password}")
 	r.HandleFunc("/resource/authenticate/status",
 		s.handleGetAuthenticationStatus())
 
 	// GET a single data set from the root data stock
 	// specific version
-	r.HandleFunc("/resource/{path}/{id}",
-		s.handleGetDataSet()).
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Queries("version", "{version}").
 		Methods("GET", "HEAD")
 	// the latest version
-	r.HandleFunc("/resource/{path}/{id}",
-		s.handleGetDataSet()).
+	r.HandleFunc("/resource/{path}/{id}", s.handleGetDataSet()).
 		Methods("GET", "HEAD")
+	// get an descriptor
 
 	// GET a digital/external file of a source
 	r.HandleFunc("/resource/datastocks/{datastock}/sources/{id}/{file}",
