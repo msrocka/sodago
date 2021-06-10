@@ -22,10 +22,12 @@ func (s *server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/resource/profiles",
 		s.handleGetProfiles()).Methods("GET")
 
-	// login
+	// authentication
 	r.HandleFunc("/resource/authenticate/login",
 		s.handleGetLogin()).
 		Queries("userName", "{user}", "password", "{password}")
+	r.HandleFunc("/resource/authenticate/status",
+		s.handleGetAuthenticationStatus())
 
 	// GET a single data set from the root data stock
 	// specific version

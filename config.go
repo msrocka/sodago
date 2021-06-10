@@ -15,8 +15,9 @@ import (
 // User contains the data of a registered user with user name and hashed
 // password.
 type User struct {
-	Name string `json:"user"`
-	Hash string `json:"hash"`
+	Name  string   `json:"user"`
+	Hash  string   `json:"hash"`
+	Roles []string `json:"roles"`
 }
 
 // Config holds the configuration of the users and data stocks.
@@ -74,8 +75,8 @@ func WriteConfig(args Args, config *Config) error {
 func AddUser() {
 	// parse and check the arguments
 	args := ParseArgs()
-	name := args["-name"]
-	pw := args["-password"]
+	name := strings.TrimSpace(args["-name"])
+	pw := strings.TrimSpace(args["-password"])
 	if name == "" || pw == "" {
 		fmt.Println("ERROR: no user or password given")
 		fmt.Println("To add a user the command should be:")
