@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"io"
 	"os"
-	"strings"
 )
 
 // An index stores the basic data set informations in a map
@@ -51,6 +48,15 @@ func (idx *index) contains(path string, entry *indexEntry) bool {
 	return false
 }
 
+// firstName returns the first entry of a list of names. Names of an ILCD data
+// set are given in multiple languages where the first name is the default one.
+func firstName(names []string) string {
+	if len(names) == 0 {
+		return ""
+	}
+	return names[0]
+}
+
 // latestVersions returns only the most recent version of each data set when
 // allVersions is false, which is the default of a list request. The order of
 // the entries is kept.
@@ -86,27 +92,27 @@ func extractIndexEntry(path string, dataSet []byte) (*indexEntry, error) {
 	if path == processPath {
 		d := &struct {
 			XMLName xml.Name `xml:"processDataSet"`
-			Name    string   `xml:"processInformation>dataSetInformation>name>baseName"`
+			Names   []string `xml:"processInformation>dataSetInformation>name>baseName"`
 			UUID    string   `xml:"processInformation>dataSetInformation>UUID"`
 			Version string   `xml:"administrativeInformation>publicationAndOwnership>dataSetVersion"`
 		}{}
 		if err := xml.Unmarshal(dataSet, d); err != nil {
 			return nil, err
 		}
-		return &indexEntry{UUID: d.UUID, Name: d.Name, Version: d.Version}, nil
+		return &indexEntry{UUID: d.UUID, Name: firstName(d.Names), Version: d.Version}, nil
 	}
 
 	if path == flowPath {
 		d := &struct {
 			XMLName xml.Name `xml:"flowDataSet"`
-			Name    string   `xml:"flowInformation>dataSetInformation>name>baseName"`
+			Names   []string `xml:"flowInformation>dataSetInformation>name>baseName"`
 			UUID    string   `xml:"flowInformation>dataSetInformation>UUID"`
 			Version string   `xml:"administrativeInformation>publicationAndOwnership>dataSetVersion"`
 		}{}
 		if err := xml.Unmarshal(dataSet, d); err != nil {
 			return nil, err
 		}
-		return &indexEntry{UUID: d.UUID, Name: d.Name, Version: d.Version}, nil
+		return &indexEntry{UUID: d.UUID, Name: firstName(d.Names), Version: d.Version}, nil
 	}
 
 	if path == flowPropertyPath {
@@ -162,50 +168,20 @@ func extractIndexEntry(path string, dataSet []byte) (*indexEntry, error) {
 	}
 
 	if path == methodPath {
-		return extractMethodEntry(dataSet)
+		// an LCIA method data set stores the name directly in the `name`
+		// element of the data set information (see the ILCD LCIA method
+		// schema)
+		d := &struct {
+			XMLName xml.Name `xml:"LCIAMethodDataSet"`
+			Names   []string `xml:"LCIAMethodInformation>dataSetInformation>name"`
+			UUID    string   `xml:"LCIAMethodInformation>dataSetInformation>UUID"`
+			Version string   `xml:"administrativeInformation>publicationAndOwnership>dataSetVersion"`
+		}{}
+		if err := xml.Unmarshal(dataSet, d); err != nil {
+			return nil, err
+		}
+		return &indexEntry{UUID: d.UUID, Name: firstName(d.Names), Version: d.Version}, nil
 	}
 
 	return nil, errors.New("unknown path: " + path)
-}
-
-// Reads the index information from the raw XML bytes of an LCIA method data
-// set. Depending on the data source, the element that contains the data set
-// information is written as `LCIAMethodInformation` or `lciaMethodInformation`,
-// thus the UUID, name and version are read via the local element names.
-func extractMethodEntry(dataSet []byte) (*indexEntry, error) {
-	decoder := xml.NewDecoder(bytes.NewReader(dataSet))
-	entry := &indexEntry{}
-	for {
-		token, err := decoder.Token()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		start, ok := token.(xml.StartElement)
-		if !ok {
-			continue
-		}
-		var target *string
-		switch start.Name.Local {
-		case "UUID":
-			target = &entry.UUID
-		case "baseName":
-			target = &entry.Name
-		case "dataSetVersion":
-			target = &entry.Version
-		default:
-			continue
-		}
-		if *target != "" {
-			continue
-		}
-		value := ""
-		if err := decoder.DecodeElement(&value, &start); err != nil {
-			return nil, err
-		}
-		*target = strings.TrimSpace(value)
-	}
-	return entry, nil
 }

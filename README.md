@@ -89,10 +89,14 @@ The prefix `/resource` is always added to all service routes (as in soda4LCA):
 
 List requests (`GET [/datastocks/{datastock}]/{path}`) are paged and support
 the query parameters `startIndex`, `pageSize`, `countOnly` and `allVersions`.
-By default, only the most recent version of a data set is returned.
+By default, only the most recent version of a data set is returned. With
+`search=true` the result is filtered by the `name` parameter, e.g.
+`GET /contacts?search=true&name=electricity`: the search phrase is split into
+whitespace separated keywords that all have to occur in the name of a data set
+(case-insensitive). With a `uuid:` prefix, the search phrase is interpreted as
+a UUID prefix instead, e.g. `GET /contacts?search=true&name=uuid:42217b74`.
 
 TODO:
 * implement: GET [/sources/{uuid}/digitalfile](https://bitbucket.org/okusche/soda4lca/src/c78970a1d3ddaf855745b938082cee9cac1363e7/Doc/src/Service_API/Service_API_Dataset_Source_GET_DigitalFile.md)
 * put types to lower case (e.g. Version)
 * normalize versions (1 == 1.00 == 1.00.000)
-* simple search

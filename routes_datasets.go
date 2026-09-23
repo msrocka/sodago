@@ -103,11 +103,20 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 		}
 		countOnly := queryBool(query, "countOnly")
 		allVersions := queryBool(query, "allVersions")
+		search := queryBool(query, "search")
 
 		// collect the entries of the requested data set type
 		var entries []*indexEntry
 		if stock.idx != nil && stock.idx.Entries != nil {
 			entries = latestVersions(stock.idx.Entries[path], allVersions)
+		}
+
+		// simple search: filter the entries by their name
+		if queryBool(query, "search") {
+			entries = filterByName(entries, query.Get("name"))
+		}
+		if search {
+			entries = filterByName(entries, query.Get("name"))
 		}
 
 		resp := DescriptorList{
