@@ -45,6 +45,14 @@ func main() {
 		return
 	}
 
+	// create a default admin user when no user is configured yet
+	if created, err := EnsureDefaultAdmin(args, config); err != nil {
+		log.Fatalln("failed to create default admin user", err)
+	} else if created {
+		log.Println("INFO: default admin created (user: " +
+			defaultAdminName + ", password: " + defaultAdminPassword + ")")
+	}
+
 	server := server{
 		config:  config,
 		cookies: initCookieStore(args),

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,7 +23,7 @@ func (s *server) handleGetProfiles() http.HandlerFunc {
 			return
 		}
 
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			http.Error(w, "server error: "+err.Error(),
 				http.StatusInternalServerError)

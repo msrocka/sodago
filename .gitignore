@@ -1,8 +1,9 @@
 # IDE settings
 .vscode/
 
-# example data
+# data and apidoc
 data/
+apidoc/
 
 # binaries and tests
 sodago*

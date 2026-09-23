@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/xml"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) handleGetLogin() http.HandlerFunc {
@@ -37,15 +35,8 @@ func (s *server) handleGetLogin() http.HandlerFunc {
 			return
 		}
 
-		// check the password
-		hash, err := base64.StdEncoding.DecodeString(user.Hash)
-		if err != nil {
-			log.Println("ERROR: could not decode user hash", err)
-			http.Error(w, "server error", http.StatusInternalServerError)
-			return
-		}
-		err = bcrypt.CompareHashAndPassword(hash, []byte(pw))
-		if err != nil {
+		// check the password (stored as plain text, testing only)
+		if user.Password != pw {
 			http.Error(w, "incorrect password or user name",
 				http.StatusBadRequest)
 			return

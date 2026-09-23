@@ -1,22 +1,20 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
-// User contains the data of a registered user with user name and hashed
-// password.
+// User contains the data of a registered user with user name and password.
+// Note: this application is for testing only, therefore the password is stored
+// as plain text in the configuration file.
 type User struct {
-	Name  string   `json:"user"`
-	Hash  string   `json:"hash"`
-	Roles []string `json:"roles,omitempty"`
+	Name     string   `json:"user"`
+	Password string   `json:"password"`
+	Roles    []string `json:"roles,omitempty"`
 }
 
 // Config holds the configuration of the users and data stocks.
@@ -71,6 +69,33 @@ func WriteConfig(args Args, config *Config) error {
 	return os.WriteFile(path, bytes, os.ModePerm)
 }
 
+// defaultAdminName and defaultAdminPassword define the credentials of the
+// admin user that is created when the configuration does not contain any user
+// yet.
+const (
+	defaultAdminName     = "admin"
+	defaultAdminPassword = "default"
+)
+
+// EnsureDefaultAdmin creates a default admin user and persists the
+// configuration when no user is defined yet. It returns true when a default
+// admin was created.
+func EnsureDefaultAdmin(args Args, config *Config) (bool, error) {
+	if len(config.Users) > 0 {
+		return false, nil
+	}
+
+	config.Users = append(config.Users, User{
+		Name:     defaultAdminName,
+		Password: defaultAdminPassword,
+		Roles:    []string{"admin"},
+	})
+	if err := WriteConfig(args, config); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func AddUser() {
 	// parse and check the arguments
 	args := ParseArgs()
@@ -102,14 +127,9 @@ func AddUser() {
 	}
 
 	// update the configuration
-	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Println("ERROR: failed to hash password", err)
-		return
-	}
 	config.Users = append(config.Users, User{
-		Name: name,
-		Hash: base64.StdEncoding.EncodeToString(hash),
+		Name:     name,
+		Password: pw,
 	})
 	if err = WriteConfig(args, config); err != nil {
 		fmt.Println("ERROR: failed to write configuration file:", err)
