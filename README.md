@@ -1,13 +1,13 @@
 # sodago
-`sodago` is an implementation of a subset of the [soda4LCA
-API](https://bitbucket.org/okusche/soda4lca). It is not intended to be used in
-production but only for testing purposes. However, it comes with a very fast
-server and is trivial to set up which makes it a fun tool when
-developing/testing against the [soda4LCA service API](https://bitbucket.org/okusche/soda4lca/src/5.0.3/Doc/src/Service_API/Service_API.md) in
-[openLCA](https://github.com/GreenDelta/olca-app) or the [EPD
-Editor](https://github.com/GreenDelta/epd-editor). 
+
+This is a small server application to mock the [soda4LCA Service
+API](https://bitbucket.org/okusche/soda4lca). We use it to develop and test the
+soda4LCA integration in [openLCA](https://github.com/GreenDelta/olca-app) and
+the [EPD Editor](https://github.com/GreenDelta/epd-editor).
+
 
 ## Usage
+
 `sodago` is written in [Go](https://golang.org) and compiles to a single binary:
 
 ```bash
@@ -16,19 +16,65 @@ go build  # compile it
 ./sodago  # run it
 ```
 
-## Data storage
-All data are stored as plain files in the `data` folder. Within this folder
-the content of each data stock is stored in a sub-folder. The name of the
-data stock is the name of this sub-folder and the UUID of the data stock is
-stored in a file `.stock` in that folder. Additionally, the content of a
-data stock is stored in the `index.json` file. The data sets are stored under
-their respective paths in the data folder (flows in `flows`, processes in
-`processes` etc.). The file name of a data set is simply `<uuid>_<version>.xml`.  
+This will try to start a server at port `8080` using the `data` folder to store
+the configuration and data files. Both can be changed with the following command
+line options:
 
-External documents of sources are stored under `external_docs/<source uuid>/<file>`.
-Profiles are stored in the sub-folder `profiles` of the `data` directory. Thus,
-you should not name a data stock `profiles`. Each profile is stored in a
-separate JSON file where the name has the following pattern: `<profile ID>.json`
+```bash
+./sodago -port 8081 -data ./my-data
+```
+
+The data folder is created automatically when it does not exist yet. On start,
+`sodago` also checks if users are configured and creates a default admin user if
+this is not the case.
+
+
+## Users and roles
+
+The users of the server are configured in the `config.json` file in the data
+folder. It has the following format:
+
+```json
+{
+  "users": [
+    {
+      "user": "admin",
+      "password": "default",
+      "roles": [ "admin" ]
+    }
+  ]
+}
+```
+
+Currently the `roles` do not have a real meaning. They are only reported in the
+authentication status (`GET /resource/authenticate/status`).
+
+
+## Data storage
+All data are stored as plain files in the `data` folder with the following layout:
+
+```
+data
+├── config.json         # the configured users (see above)
+├── cookie_auth.key     # the signing key for the session cookie
+├── profiles            # the profiles served by the API
+│   └── <profile ID>.json
+└── root                # a data stock, the folder name is its name
+    ├── .stock          # the UUID of the data stock
+    ├── index.json      # the index of the data sets stored in this stock
+    ├── processes       # data sets by type, the folder name is the type
+    │   └── <uuid>_<version>.xml
+    ├── flows           # (or flowproperties, lciamethods, sources,
+    └── external_docs   #  unitgroups, contacts)
+        └── <source uuid>
+            └── <file>
+```
+
+Each sub-folder of the `data` folder that contains a `.stock` file is a data
+stock. The name of the sub-folder is the name of the data stock and the `.stock`
+file contains the UUID of the data stock. The `root` is created automatically
+when it does not exist. The `index.json` file maps the data set types to the
+UUIDs, versions and names of the stored data sets for faster lookups.
 
 ## Implemented service routes
 The prefix `/resource` is always added to all service routes (as in soda4LCA):
@@ -36,7 +82,7 @@ The prefix `/resource` is always added to all service routes (as in soda4LCA):
 * `GET /datastocks`
 * `GET /profiles`
 * `GET /profiles/{id}`
-* `/authenticate/login` (returns always OK!)
+* `/authenticate/login?userName={user}&password={password}`
 * `GET [/datastocks/{datastock}]/{path}`
 * `GET [/datastocks/{datastock}]/{path}/{id}[?version={version}]`
 * `GET [/datastocks/{datastock}]/sources/{id}/{file}`

@@ -22,16 +22,6 @@ type server struct {
 
 func main() {
 
-	// first check if a specific command was called
-	osArgs := os.Args
-	if len(osArgs) > 1 {
-		cmd := osArgs[1]
-		if cmd == "add-user" {
-			AddUser()
-			return
-		}
-	}
-
 	args := ParseArgs()
 
 	// ensure the data folder exists before anything tries to write into it

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -94,44 +93,4 @@ func EnsureDefaultAdmin(args Args, config *Config) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-func AddUser() {
-	// parse and check the arguments
-	args := ParseArgs()
-	name := strings.TrimSpace(args["-name"])
-	pw := strings.TrimSpace(args["-password"])
-	if name == "" || pw == "" {
-		fmt.Println("ERROR: no user or password given")
-		fmt.Println("To add a user the command should be:")
-		fmt.Println("  sodago add-user -name [USER_NAME] -password [PASSWORD]")
-		return
-	}
-
-	// ensure the data folder exists before writing the configuration
-	if err := os.MkdirAll(args.DataDir(), os.ModePerm); err != nil {
-		fmt.Println("ERROR: failed to create data folder", args.DataDir(), err)
-		return
-	}
-
-	// check that the user does not exist yet
-	config, err := ReadConfig(args)
-	if err != nil {
-		fmt.Println("ERROR: failed to read configuration file:", err)
-		return
-	}
-	existing := config.GetUser(name)
-	if existing != nil {
-		fmt.Println("ERROR: a user", name, "already exists")
-		return
-	}
-
-	// update the configuration
-	config.Users = append(config.Users, User{
-		Name:     name,
-		Password: pw,
-	})
-	if err = WriteConfig(args, config); err != nil {
-		fmt.Println("ERROR: failed to write configuration file:", err)
-	}
 }
