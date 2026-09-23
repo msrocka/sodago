@@ -51,6 +51,33 @@ func (idx *index) contains(path string, entry *indexEntry) bool {
 	return false
 }
 
+// latestVersions returns only the most recent version of each data set when
+// allVersions is false, which is the default of a list request. The order of
+// the entries is kept.
+func latestVersions(entries []*indexEntry, allVersions bool) []*indexEntry {
+	if allVersions {
+		return entries
+	}
+	latest := make(map[string]*indexEntry)
+	order := make([]string, 0, len(entries))
+	for _, e := range entries {
+		current, ok := latest[e.UUID]
+		if !ok {
+			latest[e.UUID] = e
+			order = append(order, e.UUID)
+			continue
+		}
+		if ParseVersion(e.Version).NewerThan(ParseVersion(current.Version)) {
+			latest[e.UUID] = e
+		}
+	}
+	result := make([]*indexEntry, 0, len(order))
+	for _, uid := range order {
+		result = append(result, latest[uid])
+	}
+	return result
+}
+
 // Reads the index information from the raw XML bytes of the given
 // data set. The path is the request path for the respective data
 // set type.

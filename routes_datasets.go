@@ -2,9 +2,11 @@ package main
 
 import (
 	"io"
-
 	"net/http"
+	"net/url"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -89,22 +91,44 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 			return
 		}
 
-		resp := DescriptorList{}
-		if stock.idx == nil || stock.idx.Entries == nil {
-			writeXML(&resp, w)
-			return
+		// read the query parameters (all result sets are paged)
+		query := r.URL.Query()
+		startIndex := queryInt(query, "startIndex", 0)
+		if startIndex < 0 {
+			startIndex = 0
 		}
-		entries, ok := stock.idx.Entries[path]
-		if !ok {
+		pageSize := queryInt(query, "pageSize", defaultPageSize)
+		if pageSize <= 0 {
+			pageSize = defaultPageSize
+		}
+		countOnly := queryBool(query, "countOnly")
+		allVersions := queryBool(query, "allVersions")
+
+		// collect the entries of the requested data set type
+		var entries []*indexEntry
+		if stock.idx != nil && stock.idx.Entries != nil {
+			entries = latestVersions(stock.idx.Entries[path], allVersions)
+		}
+
+		resp := DescriptorList{
+			TotalSize:  len(entries),
+			StartIndex: startIndex,
+			PageSize:   pageSize,
+		}
+		if countOnly {
 			writeXML(&resp, w)
 			return
 		}
 
-		resp.PageSize = len(entries)
-		resp.TotalSize = len(entries)
-		resp.StartIndex = 0
-
-		for _, e := range entries {
+		// select the page entries
+		if startIndex > len(entries) {
+			startIndex = len(entries)
+		}
+		end := startIndex + pageSize
+		if end > len(entries) {
+			end = len(entries)
+		}
+		for _, e := range entries[startIndex:end] {
 			base := BaseDescriptor{
 				UUID:    e.UUID,
 				Name:    e.Name,
@@ -131,6 +155,29 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 
 		writeXML(&resp, w)
 	}
+}
+
+// defaultPageSize is the number of data sets that is returned in a list
+// response when no page size is specified in the request.
+const defaultPageSize = 500
+
+// queryInt returns the integer value of the given query parameter or the given
+// default value when the parameter is not set or not a valid integer.
+func queryInt(query url.Values, name string, defaultValue int) int {
+	value := strings.TrimSpace(query.Get(name))
+	if value == "" {
+		return defaultValue
+	}
+	i, err := strconv.Atoi(value)
+	if err != nil {
+		return defaultValue
+	}
+	return i
+}
+
+// queryBool returns true when the given query parameter is set to a true value.
+func queryBool(query url.Values, name string) bool {
+	return strings.EqualFold(strings.TrimSpace(query.Get(name)), "true")
 }
 
 func (s *server) handleGetDataSetOverview() http.HandlerFunc {

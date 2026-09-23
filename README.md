@@ -79,11 +79,17 @@ The prefix `/resource` is always added to all service routes (as in soda4LCA):
 
 * `GET /datastocks`
 * `/authenticate/login?userName={user}&password={password}`
+* `GET /authenticate/logout`
+* `GET /authenticate/status`
 * `GET [/datastocks/{datastock}]/{path}`
 * `GET [/datastocks/{datastock}]/{path}/{id}[?version={version}]`
 * `GET [/datastocks/{datastock}]/sources/{id}/{file}`
 * `POST /{path}`
 * `POST /sources/withBinaries`
+
+List requests (`GET [/datastocks/{datastock}]/{path}`) are paged and support
+the query parameters `startIndex`, `pageSize`, `countOnly` and `allVersions`.
+By default, only the most recent version of a data set is returned.
 
 TODO:
 * implement: GET [/sources/{uuid}/digitalfile](https://bitbucket.org/okusche/soda4lca/src/c78970a1d3ddaf855745b938082cee9cac1363e7/Doc/src/Service_API/Service_API_Dataset_Source_GET_DigitalFile.md)

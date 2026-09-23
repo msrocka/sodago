@@ -54,6 +54,34 @@ func (s *server) handleGetLogin() http.HandlerFunc {
 	}
 }
 
+// handleGetLogout closes the session of the currently logged in user.
+func (s *server) handleGetLogout() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.SessionUser(r) == nil {
+			w.Write([]byte("currently not authenticated"))
+			return
+		}
+
+		session, err := s.cookies.Get(r, "sodago-session")
+		if err != nil {
+			log.Println("ERROR: could not get session", err)
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
+		// remove the user from the session and delete the session cookie
+		delete(session.Values, "user")
+		session.Options.MaxAge = -1
+		if err := session.Save(r, w); err != nil {
+			log.Println("ERROR: could not save session", err)
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte("successfully logged out"))
+	}
+}
+
 func (s *server) handleGetAuthenticationStatus() http.HandlerFunc {
 
 	type response struct {

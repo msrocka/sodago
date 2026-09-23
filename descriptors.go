@@ -43,11 +43,15 @@ type ImpactCategoryDescriptor struct {
 	XMLName xml.Name `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/LCIAMethod LCIAMethod"`
 }
 
+// DescriptorList is the response type of a data set list request. The
+// attributes and the descriptor elements are in the namespaces defined by the
+// ILCD Service API (see the reference implementation in olca-ilcd:
+// `org.openlca.ilcd.descriptors.DescriptorList`).
 type DescriptorList struct {
 	XMLName          xml.Name                   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI dataSetList"`
-	TotalSize        int                        `xml:"totalSize,attr"`
-	StartIndex       int                        `xml:"startIndex,attr"`
-	PageSize         int                        `xml:"pageSize,attr"`
+	TotalSize        int                        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI totalSize,attr"`
+	StartIndex       int                        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI startIndex,attr"`
+	PageSize         int                        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI pageSize,attr"`
 	Processes        []ProcessDescriptor        `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Process process"`
 	Flows            []FlowDescriptor           `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/Flow flow"`
 	FlowProps        []FlowPropertyDescriptor   `xml:"http://www.ilcd-network.org/ILCD/ServiceAPI/FlowProperty flowProperty"`

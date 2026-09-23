@@ -17,6 +17,8 @@ func (s *server) registerRoutes(r *mux.Router) {
 	// authentication
 	r.HandleFunc("/resource/authenticate/login", s.handleGetLogin()).
 		Queries("userName", "{user}", "password", "{password}")
+	r.HandleFunc("/resource/authenticate/logout",
+		s.handleGetLogout()).Methods("GET")
 	r.HandleFunc("/resource/authenticate/status",
 		s.handleGetAuthenticationStatus())
 
