@@ -14,14 +14,6 @@ func (s *server) registerRoutes(r *mux.Router) {
 	r.HandleFunc("/resource/datastocks",
 		s.handleGetDataStocks()).Methods("GET")
 
-	// profiles
-	// GET profile
-	r.HandleFunc("/resource/profiles/{id}",
-		s.handleGetProfile()).Methods("GET")
-	// GET profiles
-	r.HandleFunc("/resource/profiles",
-		s.handleGetProfiles()).Methods("GET")
-
 	// authentication
 	r.HandleFunc("/resource/authenticate/login", s.handleGetLogin()).
 		Queries("userName", "{user}", "password", "{password}")

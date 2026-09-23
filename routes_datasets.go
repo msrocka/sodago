@@ -123,6 +123,9 @@ func (s *server) handleGetDataSets() http.HandlerFunc {
 				resp.Contacts = append(resp.Contacts, ContactDescriptor{BaseDescriptor: base})
 			case sourcePath:
 				resp.Sources = append(resp.Sources, SourceDescriptor{BaseDescriptor: base})
+			case methodPath:
+				resp.ImpactCategories = append(resp.ImpactCategories,
+					ImpactCategoryDescriptor{BaseDescriptor: base})
 			}
 		}
 

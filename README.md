@@ -57,8 +57,6 @@ All data are stored as plain files in the `data` folder with the following layou
 data
 ├── config.json         # the configured users (see above)
 ├── cookie_auth.key     # the signing key for the session cookie
-├── profiles            # the profiles served by the API
-│   └── <profile ID>.json
 └── root                # a data stock, the folder name is its name
     ├── .stock          # the UUID of the data stock
     ├── index.json      # the index of the data sets stored in this stock
@@ -80,8 +78,6 @@ UUIDs, versions and names of the stored data sets for faster lookups.
 The prefix `/resource` is always added to all service routes (as in soda4LCA):
 
 * `GET /datastocks`
-* `GET /profiles`
-* `GET /profiles/{id}`
 * `/authenticate/login?userName={user}&password={password}`
 * `GET [/datastocks/{datastock}]/{path}`
 * `GET [/datastocks/{datastock}]/{path}/{id}[?version={version}]`
@@ -94,4 +90,3 @@ TODO:
 * put types to lower case (e.g. Version)
 * normalize versions (1 == 1.00 == 1.00.000)
 * simple search
-* LCIA methods
