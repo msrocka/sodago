@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"io/ioutil"
 	"os"
 )
 
@@ -25,11 +24,11 @@ func (idx *index) save(file string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(file, data, os.ModePerm)
+	return os.WriteFile(file, data, os.ModePerm)
 }
 
 func readIndex(file string) (*index, error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

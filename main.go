@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +33,12 @@ func main() {
 	}
 
 	args := ParseArgs()
+
+	// ensure the data folder exists before anything tries to write into it
+	if err := os.MkdirAll(args.DataDir(), os.ModePerm); err != nil {
+		log.Fatalln("failed to create data folder", args.DataDir(), err)
+	}
+
 	config, err := ReadConfig(args)
 	if err != nil {
 		fmt.Println("ERROR: failed to read config", err)
@@ -44,14 +49,11 @@ func main() {
 		config:  config,
 		cookies: initCookieStore(args),
 	}
-	dir, err := newDataDir("data")
+	dir, err := newDataDir(args.DataDir())
 	if err != nil {
 		log.Fatalln("failed to init data folder", err)
 	}
 	server.dir = dir
-
-	os.MkdirAll(args.DataDir(), os.ModePerm)
-	initCookieStore(args)
 
 	r := mux.NewRouter()
 	server.registerRoutes(r)
@@ -70,12 +72,12 @@ func initCookieStore(args Args) *sessions.CookieStore {
 	var key []byte
 	if os.IsNotExist(err) {
 		key = securecookie.GenerateRandomKey(32)
-		err = ioutil.WriteFile(keyPath, key, os.ModePerm)
+		err = os.WriteFile(keyPath, key, os.ModePerm)
 		if err != nil {
 			log.Fatalln("Failed to save", keyPath, ": ", err)
 		}
 	} else {
-		key, err = ioutil.ReadFile(keyPath)
+		key, err = os.ReadFile(keyPath)
 		if err != nil {
 			log.Fatalln("Failed to read", keyPath, ": ", err)
 		}

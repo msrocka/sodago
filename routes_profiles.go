@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gorilla/mux"
@@ -32,7 +33,7 @@ func (s *server) handleGetProfiles() http.HandlerFunc {
 
 		profiles := make([]*profile, 0)
 		for _, file := range files {
-			data, err := ioutil.ReadFile(dir + "/" + file.Name())
+			data, err := os.ReadFile(dir + "/" + file.Name())
 			if err != nil {
 				http.Error(w, "server error: "+err.Error(),
 					http.StatusInternalServerError)
@@ -59,7 +60,7 @@ func (s *server) handleGetProfile() http.HandlerFunc {
 			http.Error(w, "Profile "+id+"does not exist", http.StatusNotFound)
 			return
 		}
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			http.Error(w, "server error: "+err.Error(),
 				http.StatusInternalServerError)

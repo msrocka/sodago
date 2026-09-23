@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -32,7 +31,7 @@ func (s *server) handleGetExternalFile() http.HandlerFunc {
 			return
 		}
 
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			http.Error(w, "Could not read file", http.StatusInternalServerError)
 			return
@@ -121,7 +120,7 @@ func (s *server) handlePostSourceWithFiles() http.HandlerFunc {
 			}
 			path := filepath.Join(dir, f)
 			data := []byte(str)
-			if err := ioutil.WriteFile(path, data, os.ModePerm); err != nil {
+			if err := os.WriteFile(path, data, os.ModePerm); err != nil {
 				http.Error(w, "failed to write file: "+err.Error(),
 					http.StatusInternalServerError)
 				return

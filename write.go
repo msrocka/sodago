@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func writeXML(e interface{}, w http.ResponseWriter) {
+func writeXML(e any, w http.ResponseWriter) {
 	if e == nil {
 		http.Error(w, "No data", http.StatusInternalServerError)
 		return
@@ -26,7 +26,7 @@ func writeBytesXML(data []byte, w http.ResponseWriter) {
 	w.Write(data)
 }
 
-func writeJSON(e interface{}, w http.ResponseWriter) {
+func writeJSON(e any, w http.ResponseWriter) {
 	if e == nil {
 		http.Error(w, "No data", http.StatusInternalServerError)
 		return

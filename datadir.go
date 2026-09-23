@@ -54,7 +54,7 @@ func newDataDir(root string) (*datadir, error) {
 		if !fileExists(meta) {
 			continue
 		}
-		data, err := ioutil.ReadFile(meta)
+		data, err := os.ReadFile(meta)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func (dir *datadir) createDataStock(name string) (*dataStock, error) {
 	}
 	meta := filepath.Join(stockDir, ".stock")
 	uidStr := uid.String()
-	err = ioutil.WriteFile(meta, []byte(uidStr), os.ModePerm)
+	err = os.WriteFile(meta, []byte(uidStr), os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (dir *datadir) put(stockID string, path string, dataSet []byte) (*dataStock
 		}
 	}
 	file := filepath.Join(fileDir, entry.UUID+"_"+entry.Version+".xml")
-	if err := ioutil.WriteFile(file, dataSet, os.ModePerm); err != nil {
+	if err := os.WriteFile(file, dataSet, os.ModePerm); err != nil {
 		return nil, err
 	}
 
@@ -238,7 +238,7 @@ func (dir *datadir) get(stockID string, path string, entry *indexEntry) ([]byte,
 	if !fileExists(file) {
 		return nil, errDataSetNotExists
 	}
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

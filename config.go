@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,7 +51,7 @@ func ReadConfig(args Args) (*Config, error) {
 		return nil, err
 	}
 
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +68,7 @@ func WriteConfig(args Args, config *Config) error {
 		return err
 	}
 	path := filepath.Join(args.DataDir(), "config.json")
-	return ioutil.WriteFile(path, bytes, os.ModePerm)
+	return os.WriteFile(path, bytes, os.ModePerm)
 }
 
 func AddUser() {
@@ -81,6 +80,12 @@ func AddUser() {
 		fmt.Println("ERROR: no user or password given")
 		fmt.Println("To add a user the command should be:")
 		fmt.Println("  sodago add-user -name [USER_NAME] -password [PASSWORD]")
+		return
+	}
+
+	// ensure the data folder exists before writing the configuration
+	if err := os.MkdirAll(args.DataDir(), os.ModePerm); err != nil {
+		fmt.Println("ERROR: failed to create data folder", args.DataDir(), err)
 		return
 	}
 

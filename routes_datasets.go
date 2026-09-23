@@ -1,7 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
+
 	"net/http"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ func (s *server) handlePostDataSet() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadAll(r.Body)
+		data, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Could not read body "+err.Error(), http.StatusBadRequest)
 			return
