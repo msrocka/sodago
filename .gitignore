@@ -5,6 +5,6 @@
 data/
 
 # binaries and tests
-*.exe
+sodago*
 debug
 debug.test
