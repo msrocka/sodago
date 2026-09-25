@@ -47,25 +47,30 @@ func ParseVersion(text string) *Version {
 	return &v
 }
 
+// String returns the version in the ILCD format (e.g. 01.00.000).
 func (v *Version) String() string {
 	if v == nil {
 		return "00.00.000"
 	}
-	major := strconv.Itoa(v.Major)
-	if len(major) == 1 {
-		major = "0" + major
+	return pad(v.Major, 2) + "." + pad(v.Minor, 2) + "." + pad(v.Update, 3)
+}
+
+// NormalizeVersion converts the given version into the ILCD format, e.g. `1`
+// and `1.0` become `01.00.000`. A blank version stays blank.
+func NormalizeVersion(text string) string {
+	if strings.TrimSpace(text) == "" {
+		return ""
 	}
-	minor := strconv.Itoa(v.Minor)
-	if len(minor) == 1 {
-		minor = "0" + minor
+	return ParseVersion(text).String()
+}
+
+// pad converts the given number into a string with leading zeros.
+func pad(value int, length int) string {
+	s := strconv.Itoa(value)
+	for len(s) < length {
+		s = "0" + s
 	}
-	update := strconv.Itoa(v.Update)
-	if len(update) == 1 {
-		update = "00" + update
-	} else if len(update) == 1 {
-		minor = "0" + update
-	}
-	return major + "." + minor + "." + update
+	return s
 }
 
 // Compare compares the version with another version.

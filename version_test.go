@@ -26,6 +26,23 @@ func TestVersionString(t *testing.T) {
 	}
 	check("", "00.00.000")
 	check("1.1.1", "01.01.001")
+	check("1.12.12", "01.12.012")
+	check("99.88.777", "99.88.777")
+}
+
+func TestNormalizeVersion(t *testing.T) {
+	check := func(raw string, expected string) {
+		if got := NormalizeVersion(raw); got != expected {
+			t.Errorf("normalize %q: expected %q but got %q", raw, expected, got)
+		}
+	}
+	check("", "")
+	check("   ", "")
+	check("1", "01.00.000")
+	check("1.2", "01.02.000")
+	check("1.2.3", "01.02.003")
+	check("1.12.12", "01.12.012")
+	check("01.02.003", "01.02.003")
 	check("99.88.777", "99.88.777")
 }
 

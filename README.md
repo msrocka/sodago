@@ -70,7 +70,9 @@ requests) requires authentication, either with a session cookie or with a token:
   `/resource/authenticate/getToken?userName={user}&password={password}`). The
   response is a signed token that is sent with each request in the
   `Authorization` header (`Authorization: Bearer {token}`). Tokens are valid
-  for 90 days and do not need a logout.
+  for 90 days and do not need a logout. A requested token is appended to the
+  `tokens` list of the user in the `config.json`, so that issued tokens are
+tracked there.
 
 `GET /resource/authenticate/status` reports the authenticated user of a
 request. Requests with invalid credentials, for example an expired token, are
@@ -89,7 +91,7 @@ data
     ├── .stock          # the UUID of the data stock
     ├── index.json      # the index of the data sets stored in this stock
     ├── processes       # data sets by type, the folder name is the type
-    │   └── <uuid>_<version>.xml
+    │   └── <uuid>_<version>.xml   # the version is normalized (01.00.000)
     ├── flows           # (or flowproperties, lciamethods, sources,
     └── external_docs   #  unitgroups, contacts)
         └── <source uuid>
@@ -116,6 +118,7 @@ The prefix `/resource` is always added to all service routes (as in soda4LCA):
 * `GET [/datastocks/{datastock}]/{path}`
 * `GET [/datastocks/{datastock}]/{path}/{id}[?version={version}]`
 * `GET [/datastocks/{datastock}]/sources/{id}/{file}`
+* `GET [/datastocks/{datastock}]/sources/{id}/digitalfile`
 * `POST /{path}`
 * `POST /sources/withBinaries`
 
@@ -128,6 +131,9 @@ whitespace separated keywords that all have to occur in the name of a data set
 (case-insensitive). With a `uuid:` prefix, the search phrase is interpreted as
 a UUID prefix instead, e.g. `GET /contacts?search=true&name=uuid:42217b74`.
 
-TODO:
-* implement: GET [/sources/{uuid}/digitalfile](https://bitbucket.org/okusche/soda4lca/src/c78970a1d3ddaf855745b938082cee9cac1363e7/Doc/src/Service_API/Service_API_Dataset_Source_GET_DigitalFile.md)
-* normalize versions (1 == 1.00 == 1.00.000)
+Versions are stored in the normalized ILCD format, so `1`, `1.0` and `01.00.000`
+refer to the same version of a data set.
+
+The route `GET [/datastocks/{datastock}]/sources/{id}/digitalfile` returns the
+first digital file (the first `referenceToDigitalFile` entry) of a source, while
+`.../sources/{id}/{file}` returns the file with the given name.

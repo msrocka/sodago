@@ -32,9 +32,9 @@ func (config *Config) GetUser(name string) *User {
 	}
 	lowerName := strings.ToLower(strings.TrimSpace(name))
 	for i := range config.Users {
-		user := config.Users[i]
+		user := &config.Users[i]
 		if strings.ToLower(user.Name) == lowerName {
-			return &user
+			return user
 		}
 	}
 	return nil
@@ -85,6 +85,11 @@ func WriteConfig(args Args, config *Config) error {
 	}
 	path := filepath.Join(args.DataDir(), "config.json")
 	return os.WriteFile(path, bytes, os.ModePerm)
+}
+
+// saveConfig persists the current configuration in the data folder.
+func (s *server) saveConfig() error {
+	return WriteConfig(Args{"-data": s.dir.root}, s.config)
 }
 
 // defaultAdminName and defaultAdminPassword define the credentials of the

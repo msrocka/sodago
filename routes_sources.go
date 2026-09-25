@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/xml"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -23,6 +25,15 @@ func (s *server) handleGetExternalFile() http.HandlerFunc {
 		if stock == nil {
 			http.Error(w, "Unknown data stock", http.StatusNotFound)
 			return
+		}
+
+		// the `digitalfile` route returns the first digital file of a source
+		if file == "digitalfile" {
+			file = s.firstDigitalFile(stock, uid)
+			if file == "" {
+				http.Error(w, "Unknown file", http.StatusNotFound)
+				return
+			}
 		}
 
 		path := filepath.Join(stock.dir, "external_docs", uid, file)
@@ -48,6 +59,52 @@ func (s *server) handleGetExternalFile() http.HandlerFunc {
 		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 		w.Write(data)
 	}
+}
+
+// firstDigitalFile returns the name of the first digital file that is
+// referenced in the given source data set or an empty string when the source
+// has no such reference.
+func (s *server) firstDigitalFile(stock *dataStock, uid string) string {
+	data, err := s.dir.get(stock.uid, sourcePath, &indexEntry{UUID: uid})
+	if err != nil {
+		return ""
+	}
+	return firstDigitalFileName(data)
+}
+
+// firstDigitalFileName reads the file name of the first digital file reference
+// from the given source data set XML.
+func firstDigitalFileName(source []byte) string {
+	d := &struct {
+		Files []struct {
+			URI string `xml:"uri,attr"`
+		} `xml:"sourceInformation>dataSetInformation>referenceToDigitalFile"`
+	}{}
+	if err := xml.Unmarshal(source, d); err != nil {
+		return ""
+	}
+	for _, file := range d.Files {
+		if name := fileNameOf(file.URI); name != "" {
+			return name
+		}
+	}
+	return ""
+}
+
+// fileNameOf returns the file name of a digital file reference. The last part
+// of the URI is used and unescaped (like the clients do it).
+func fileNameOf(uri string) string {
+	name := strings.TrimSpace(strings.ReplaceAll(uri, `\`, "/"))
+	if pos := strings.LastIndex(name, "/"); pos >= 0 {
+		name = name[pos+1:]
+	}
+	if name == "" {
+		return ""
+	}
+	if decoded, err := url.QueryUnescape(name); err == nil {
+		return decoded
+	}
+	return name
 }
 
 func (s *server) handlePostSourceWithFiles() http.HandlerFunc {

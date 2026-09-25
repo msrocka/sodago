@@ -110,6 +110,18 @@ func (s *server) writeToken(w http.ResponseWriter, name, pw string) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
+
+	// remember the token for the user
+	s.mutex.Lock()
+	user.Tokens = append(user.Tokens, token)
+	err = s.saveConfig()
+	s.mutex.Unlock()
+	if err != nil {
+		log.Println("ERROR: could not save config", err)
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(token))
 }

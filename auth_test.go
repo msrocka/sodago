@@ -7,6 +7,8 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +19,14 @@ import (
 // newTestServer creates a server that runs with the given users in a temporary
 // data folder. When no user is given, the default admin user is created.
 func newTestServer(t *testing.T, users ...User) *httptest.Server {
+	t.Helper()
+	_, server := newTestSetup(t, users...)
+	return server
+}
+
+// newTestSetup also returns the internal state of the test server, e.g. for
+// tests that check the configuration file.
+func newTestSetup(t *testing.T, users ...User) (*server, *httptest.Server) {
 	t.Helper()
 	args := Args{"-data": t.TempDir()}
 	config := &Config{Users: users}
@@ -46,7 +56,7 @@ func newTestServer(t *testing.T, users ...User) *httptest.Server {
 	s.registerRoutes(router)
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
-	return server
+	return s, server
 }
 
 // TestAnonymousAccess checks that reading is open while writing needs a user.
@@ -145,6 +155,32 @@ func TestConfiguredToken(t *testing.T) {
 		http.StatusForbidden)
 }
 
+// TestTokenIsStoredInConfig checks that a requested token is written to the
+// configuration of the user.
+func TestTokenIsStoredInConfig(t *testing.T) {
+	s, server := newTestSetup(t)
+	client := server.Client()
+
+	resp := postForm(t, client, server, "/resource/authenticate/getToken",
+		url.Values{"username": {"admin"}, "password": {"default"}})
+	assertStatus(t, resp, http.StatusOK)
+	token := strings.TrimSpace(textOf(t, resp))
+
+	// the token is remembered for the user ...
+	if s.config.GetUserByToken(token) == nil {
+		t.Error("expected the token in the configuration")
+	}
+
+	// ... and written to the configuration file
+	data, err := os.ReadFile(filepath.Join(s.dir.root, "config.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), token) {
+		t.Error("expected the token in the config.json file")
+	}
+}
+
 // TestTokenExpiry checks that generated tokens expire.
 func TestTokenExpiry(t *testing.T) {
 	auth, err := initTokenAuth(Args{"-data": t.TempDir()})
@@ -172,6 +208,20 @@ func TestTokenExpiry(t *testing.T) {
 	if _, err := auth.Verify("not.a.token"); err == nil {
 		t.Error("expected an invalid token to be rejected")
 	}
+}
+
+// login returns a client that is logged in as the default admin.
+func login(t *testing.T, server *httptest.Server) *http.Client {
+	t.Helper()
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{Jar: jar}
+	resp := postForm(t, client, server, "/resource/authenticate/login",
+		url.Values{"username": {"admin"}, "password": {"default"}})
+	assertStatus(t, resp, http.StatusOK)
+	return client
 }
 
 // testContactXML is a minimal contact that can be posted to the server.

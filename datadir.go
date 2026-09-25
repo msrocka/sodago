@@ -151,6 +151,8 @@ func (dir *datadir) put(stockID string, path string, dataSet []byte) (*dataStock
 	if err != nil {
 		return nil, errInvalidDataSet
 	}
+	// versions are stored in the normalized ILCD format
+	entry.Version = NormalizeVersion(entry.Version)
 	if entry.UUID == "" || entry.Version == "" {
 		return nil, errInvalidDataSet
 	}
@@ -204,7 +206,7 @@ func (dir *datadir) get(stockID string, path string, entry *indexEntry) ([]byte,
 	}
 	file := ""
 	if entry.Version != "" {
-		file = entry.UUID + "_" + entry.Version + ".xml"
+		file = entry.UUID + "_" + NormalizeVersion(entry.Version) + ".xml"
 	} else {
 
 		// if no version is given, we want the latest one
