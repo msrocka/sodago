@@ -10,17 +10,26 @@ import (
 
 func (s *server) registerRoutes(r *mux.Router) {
 
+	// check the credentials of each request
+	r.Use(s.authenticationMiddleware)
+
 	// GET data stocks
 	r.HandleFunc("/resource/datastocks",
 		s.handleGetDataStocks()).Methods("GET")
 
 	// authentication
+	r.HandleFunc("/resource/authenticate/login",
+		s.handlePostLogin()).Methods("POST")
 	r.HandleFunc("/resource/authenticate/login", s.handleGetLogin()).
-		Queries("userName", "{user}", "password", "{password}")
+		Queries("userName", "{user}", "password", "{password}").Methods("GET")
+	r.HandleFunc("/resource/authenticate/getToken",
+		s.handlePostToken()).Methods("POST")
+	r.HandleFunc("/resource/authenticate/getToken", s.handleGetToken()).
+		Queries("userName", "{user}", "password", "{password}").Methods("GET")
 	r.HandleFunc("/resource/authenticate/logout",
 		s.handleGetLogout()).Methods("GET")
 	r.HandleFunc("/resource/authenticate/status",
-		s.handleGetAuthenticationStatus())
+		s.handleGetAuthenticationStatus()).Methods("GET", "HEAD")
 
 	// GET a single data set from the root data stock
 	// get an overview

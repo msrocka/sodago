@@ -10,6 +10,10 @@ const (
 	unitGroupPath    = "unitgroups"
 )
 
+// authenticatePath is the prefix of the authentication routes. These routes
+// are not protected, so that a client can always request a new token.
+const authenticatePath = "/resource/authenticate/"
+
 func isValidPath(path string) bool {
 	switch path {
 	case

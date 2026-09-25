@@ -14,6 +14,9 @@ type User struct {
 	Name     string   `json:"user"`
 	Password string   `json:"password"`
 	Roles    []string `json:"roles,omitempty"`
+	// Tokens are pre-configured authentication tokens of this user. They are
+	// an alternative to the tokens that are generated via the service API.
+	Tokens []string `json:"tokens,omitempty"`
 }
 
 // Config holds the configuration of the users and data stocks.
@@ -32,6 +35,22 @@ func (config *Config) GetUser(name string) *User {
 		user := config.Users[i]
 		if strings.ToLower(user.Name) == lowerName {
 			return &user
+		}
+	}
+	return nil
+}
+
+// GetUserByToken returns the user that has the given token in its configured
+// token list. Returns nil if there is no such user.
+func (config *Config) GetUserByToken(token string) *User {
+	if config == nil || token == "" {
+		return nil
+	}
+	for i := range config.Users {
+		for _, configured := range config.Users[i].Tokens {
+			if configured == token {
+				return &config.Users[i]
+			}
 		}
 	}
 	return nil

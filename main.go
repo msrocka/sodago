@@ -17,6 +17,7 @@ type server struct {
 	config  *Config
 	dir     *datadir
 	cookies *sessions.CookieStore
+	tokens  *tokenAuth
 	mutex   sync.Mutex
 }
 
@@ -43,9 +44,15 @@ func main() {
 			defaultAdminName + ", password: " + defaultAdminPassword + ")")
 	}
 
+	tokens, err := initTokenAuth(args)
+	if err != nil {
+		log.Fatalln("failed to init token auth", err)
+	}
+
 	server := server{
 		config:  config,
 		cookies: initCookieStore(args),
+		tokens:  tokens,
 	}
 	dir, err := newDataDir(args.DataDir())
 	if err != nil {
@@ -80,5 +87,14 @@ func initCookieStore(args Args) *sessions.CookieStore {
 			log.Fatalln("Failed to read", keyPath, ": ", err)
 		}
 	}
-	return sessions.NewCookieStore(key)
+	store := sessions.NewCookieStore(key)
+	// sodago runs on plain HTTP, so the session cookie must not be marked as
+	// secure; otherwise, standard clients would not send it back.
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 30,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	return store
 }

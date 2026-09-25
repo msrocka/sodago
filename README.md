@@ -40,14 +40,41 @@ folder. It has the following format:
     {
       "user": "admin",
       "password": "default",
-      "roles": [ "admin" ]
+      "roles": [ "admin" ],
+      "tokens": [ "a-fixed-admin-token" ]
     }
   ]
 }
 ```
 
 Currently the `roles` do not have a real meaning. They are only reported in the
-authentication status (`GET /resource/authenticate/status`).
+`GET /resource/authenticate/status` response.
+
+The optional `tokens` list contains pre-configured authentication tokens of a
+user. They can be used directly in the `Authorization` header, without
+requesting a token via the service API first.
+
+
+## Authentication
+
+Reading data is always allowed, also for anonymous users. Writing data (`POST`
+requests) requires authentication, either with a session cookie or with a token:
+
+* **Session**: `POST /resource/authenticate/login` with the form parameters
+  `username` and `password`. The legacy
+  `/resource/authenticate/login?userName={user}&password={password}` route is
+  also supported. The session cookie is sent with each request and is closed
+  with `GET /resource/authenticate/logout`.
+* **Token**: `POST /resource/authenticate/getToken` with the form parameters
+  `username` and `password` (legacy:
+  `/resource/authenticate/getToken?userName={user}&password={password}`). The
+  response is a signed token that is sent with each request in the
+  `Authorization` header (`Authorization: Bearer {token}`). Tokens are valid
+  for 90 days and do not need a logout.
+
+`GET /resource/authenticate/status` reports the authenticated user of a
+request. Requests with invalid credentials, for example an expired token, are
+rejected with `403 Permission denied.`
 
 
 ## Data storage
@@ -57,6 +84,7 @@ All data are stored as plain files in the `data` folder with the following layou
 data
 ├── config.json         # the configured users (see above)
 ├── cookie_auth.key     # the signing key for the session cookie
+├── token_auth.key      # the signing key for the authentication tokens
 └── root                # a data stock, the folder name is its name
     ├── .stock          # the UUID of the data stock
     ├── index.json      # the index of the data sets stored in this stock
@@ -78,9 +106,13 @@ UUIDs, versions and names of the stored data sets for faster lookups.
 The prefix `/resource` is always added to all service routes (as in soda4LCA):
 
 * `GET /datastocks`
+* `POST /authenticate/login` (form: `username`, `password`)
 * `/authenticate/login?userName={user}&password={password}`
+* `POST /authenticate/getToken` (form: `username`, `password`)
+* `/authenticate/getToken?userName={user}&password={password}`
 * `GET /authenticate/logout`
 * `GET /authenticate/status`
+* `Authorization: Bearer {token}` (session or token for all routes)
 * `GET [/datastocks/{datastock}]/{path}`
 * `GET [/datastocks/{datastock}]/{path}/{id}[?version={version}]`
 * `GET [/datastocks/{datastock}]/sources/{id}/{file}`
@@ -98,5 +130,4 @@ a UUID prefix instead, e.g. `GET /contacts?search=true&name=uuid:42217b74`.
 
 TODO:
 * implement: GET [/sources/{uuid}/digitalfile](https://bitbucket.org/okusche/soda4lca/src/c78970a1d3ddaf855745b938082cee9cac1363e7/Doc/src/Service_API/Service_API_Dataset_Source_GET_DigitalFile.md)
-* put types to lower case (e.g. Version)
 * normalize versions (1 == 1.00 == 1.00.000)
